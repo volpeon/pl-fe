@@ -407,6 +407,12 @@ const getFeatures = (instance: Instance) => {
     antennas: instance.api_versions['kmyblue_antenna.fedibird.pl-api'] >= 1,
 
     /**
+     * Supports Iceshrimp.NET authorization
+     * @see POST /api/v1/accounts/authorize_iceshrimp
+     */
+    authorizeIceshrimp: v.software === ICESHRIMP_NET && gt(v.version, '2025.1.0'),
+
+    /**
      * Set your birthday and view upcoming birthdays.
      * @see GET /api/v1/pleroma/birthdays
      * @see POST /api/v1/accounts

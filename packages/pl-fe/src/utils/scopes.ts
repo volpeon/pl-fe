@@ -7,18 +7,18 @@ import type { RootState } from 'pl-fe/store';
  * Mastodon will refuse scopes it doesn't know, so care is needed.
  */
 const getInstanceScopes = (instance: Instance, admin: boolean =  true) => {
-  const v = getFeatures(instance).version;
+  const features = getFeatures(instance);
 
   let scopes;
 
-  switch (v.software) {
-    case ICESHRIMP_NET:
+  switch (true) {
+    case features.version.software === ICESHRIMP_NET && features.authorizeIceshrimp:
       scopes = 'read write follow push iceshrimp';
       break;
-    case TOKI:
+    case features.version.software === TOKI:
       scopes = 'read write follow push write:bites';
       break;
-    case PLEROMA:
+    case features.version.software === PLEROMA:
       scopes = 'read write follow push';
       break;
     default:
@@ -26,7 +26,7 @@ const getInstanceScopes = (instance: Instance, admin: boolean =  true) => {
   }
 
   if (admin) {
-    switch (v.software) {
+    switch (features.version.software) {
       case HOLLO:
       case ICESHRIMP_NET:
         break;
