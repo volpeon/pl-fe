@@ -38,8 +38,8 @@ const DEFAULT_COLORS = {
 };
 
 const normalizeColors = (theme: Partial<Pick<PlFeConfig, 'brandColor' | 'accentColor' | 'colors'>>, dark?: boolean) => {
-  const brandColor: string = theme.brandColor || theme.colors?.primary?.['500'] || '#d80482';
-  const accentColor: string = theme.accentColor || theme.colors?.accent?.['500'] || generateAccent(brandColor) || '';
+  const brandColor: string = theme.brandColor || theme.colors?.primary?.base || '#d80482';
+  const accentColor: string = theme.accentColor || theme.colors?.accent?.base || generateAccent(brandColor) || '';
 
   const colors = {
     ...theme.colors,
@@ -60,7 +60,7 @@ const normalizeColors = (theme: Partial<Pick<PlFeConfig, 'brandColor' | 'accentC
     // @ts-ignore
     'gradient-end': normalizedColors.accent?.['500'],
     // @ts-ignore
-    'accent-blue': normalizedColors.primary?.['600'],
+    'accent-blue': normalizedColors.primary?.[dark ? '300' : '600'],
     ...normalizedColors,
   } as typeof normalizedColors;
 };

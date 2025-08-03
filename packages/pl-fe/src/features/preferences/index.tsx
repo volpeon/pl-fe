@@ -23,6 +23,7 @@ import { isStandalone } from 'pl-fe/utils/state';
 import ThemeToggle from '../ui/components/theme-toggle';
 
 import type { AppDispatch } from 'pl-fe/store';
+import { useTheme } from 'pl-fe/hooks/use-theme';
 
 const languages = {
   en: 'English',
@@ -120,6 +121,7 @@ const Preferences = () => {
   const plFeConfig = usePlFeConfig();
   const instance = useInstance();
   const standalone = useAppSelector(isStandalone);
+  const themeType = useTheme();
 
   const brandColor = settings.theme?.brandColor || plFeConfig.brandColor || '#d80482';
 
@@ -196,8 +198,8 @@ const Preferences = () => {
         </ListItem>
         <PaletteListItem
           label={intl.formatMessage(messages.brandColor)}
-          palette={colors(brandColor)}
-          onChange={(palette) => onBrandColorChange(palette['500'])}
+          palette={colors(brandColor, themeType !== 'light')}
+          onChange={(palette) => onBrandColorChange(palette.base)}
           allowTintChange={false}
         />
         <ListItem label={<div className='whitespace-nowrap'><FormattedMessage id='preferences.fields.interface_size' defaultMessage='Interface size' /></div>}>

@@ -97,9 +97,9 @@ const scale = (hex: string, saturation: number, lightness: number): string => {
   return rgbToHex(hslToRgb(color));
 };
 
-const colors = (baseColor: string, dark?: boolean): TailwindColorObject => {
-  const response: TailwindColorObject = {
-    500: `#${baseColor}`.replace(/##/g, '#'),
+const colors = (baseColor: string, dark?: boolean): TailwindColorObject & { base: string } => {
+  const response: TailwindColorObject & { base: string } = {
+    base: `#${baseColor}`.replace(/##/g, '#'),
   };
 
   let saturationMap: Record<number, number>, lightnessMap: Record<number, number>;
@@ -107,13 +107,13 @@ const colors = (baseColor: string, dark?: boolean): TailwindColorObject => {
   if (!dark) {
     saturationMap = {
       50:  0.4,
-      100: 0.5,
-      200: 0.6,
-      300: 0.8,
-      400: 0.9,
-      500: 1,
-      600: 1,
-      700: 1,
+      100: 0.45,
+      200: 0.5,
+      300: 0.75,
+      400: 0.8,
+      500: 0.85,
+      600: 0.9,
+      700: 0.95,
       800: 1,
       900: 1,
     };
@@ -132,15 +132,15 @@ const colors = (baseColor: string, dark?: boolean): TailwindColorObject => {
   } else {
     saturationMap = {
       50:  1,
-      100: 1,
-      200: 1,
-      300: 1,
-      400: 1,
-      500: 1,
-      600: 0.4,
-      700: 0.3,
-      800: 0.15,
-      900: 0.1,
+      100: 0.95,
+      200: 0.9,
+      300: 0.7,
+      400: 0.6,
+      500: 0.4,
+      600: 0.3,
+      700: 0.25,
+      800: 0.2,
+      900: 0.15,
     };
     lightnessMap = {
       50: 0.975,
@@ -154,7 +154,6 @@ const colors = (baseColor: string, dark?: boolean): TailwindColorObject => {
       800: 0.15,
       900: 0.095,
     };
-    console.log("dark", saturationMap)
   }
 
   [50, 100, 200, 300, 400, 500, 600, 700, 800, 900].forEach(level => {
