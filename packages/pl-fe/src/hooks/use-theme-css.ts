@@ -7,6 +7,7 @@ import { usePlFeConfig } from './use-pl-fe-config';
 import { useSettings } from './use-settings';
 
 import type { PlFeConfig } from 'pl-fe/normalizers/pl-fe/pl-fe-config';
+import { useTheme } from './use-theme';
 
 const DEFAULT_COLORS = {
   success: {
@@ -36,7 +37,7 @@ const DEFAULT_COLORS = {
   'greentext': '#789922',
 };
 
-const normalizeColors = (theme: Partial<Pick<PlFeConfig, 'brandColor' | 'accentColor' | 'colors'>>) => {
+const normalizeColors = (theme: Partial<Pick<PlFeConfig, 'brandColor' | 'accentColor' | 'colors'>>, dark?: boolean) => {
   const brandColor: string = theme.brandColor || theme.colors?.primary?.['500'] || '#d80482';
   const accentColor: string = theme.accentColor || theme.colors?.accent?.['500'] || generateAccent(brandColor) || '';
 
@@ -50,6 +51,7 @@ const normalizeColors = (theme: Partial<Pick<PlFeConfig, 'brandColor' | 'accentC
     accentColor,
     // @ts-ignore
     colors,
+    dark,
   });
 
   return {
@@ -66,6 +68,7 @@ const normalizeColors = (theme: Partial<Pick<PlFeConfig, 'brandColor' | 'accentC
 const useThemeCss = (overwriteConfig?: PlFeConfig) => {
   const { demo, theme } = useSettings();
   const plFeConfig = usePlFeConfig();
+  const themeType = useTheme();
 
   return useMemo(() => {
     try {
@@ -74,13 +77,13 @@ const useThemeCss = (overwriteConfig?: PlFeConfig) => {
       else if (demo) baseTheme = {};
       else baseTheme = theme || plFeConfig;
 
-      const colors = normalizeColors(baseTheme);
+      const colors = normalizeColors(baseTheme, themeType !== 'light');
 
       return generateThemeCss(colors);
     } catch (_) {
       return generateThemeCss({});
     }
-  }, [overwriteConfig, demo, plFeConfig, theme]);
+  }, [overwriteConfig, demo, plFeConfig, theme, themeType]);
 };
 
 export { normalizeColors, useThemeCss };

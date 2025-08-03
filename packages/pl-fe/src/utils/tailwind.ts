@@ -9,14 +9,14 @@ type PlFeColors = Record<string, Record<string, string>>;
 const isHex = (value: any): boolean => /^#([0-9A-F]{3}){1,2}$/i.test(value);
 
 /** Expand hex colors into tints */
-const expandPalette = (palette: TailwindColorPalette): TailwindColorPalette =>
+const expandPalette = (palette: TailwindColorPalette, dark?: boolean): TailwindColorPalette =>
   // Generate palette only for present colors
   Object.entries(palette).reduce((result: TailwindColorPalette, colorData) => {
     const [colorName, color] = colorData;
 
     // Conditionally handle hex color and Tailwind color object
     if (typeof color === 'string' && isHex(color)) {
-      result[colorName] = tintify(color);
+      result[colorName] = tintify(color, dark);
     } else if (color && typeof color === 'object') {
       result[colorName] = color;
     }
@@ -29,9 +29,10 @@ const maybeGenerateAccentColor = (brandColor: string): string | null =>
   isHex(brandColor) ? generateAccent(brandColor) : null;
 
 /** Build a color object from legacy colors */
-const fromBasicColors = ({ brandColor, accentColor }: {
+const fromBasicColors = ({ brandColor, accentColor, dark }: {
   brandColor: string;
   accentColor: string | null;
+  dark?: boolean;
 }): TailwindColorPalette => {
   const accent = typeof accentColor === 'string' && isHex(accentColor) ? accentColor : maybeGenerateAccentColor(brandColor);
 
@@ -40,7 +41,7 @@ const fromBasicColors = ({ brandColor, accentColor }: {
     secondary: accent,
     accent,
     gray: (isHex(brandColor) ? generateNeutral(brandColor) : null),
-  });
+  }, dark);
 };
 
 /** Convert pl-fe Config into Tailwind colors */
@@ -48,6 +49,7 @@ const toTailwind = (config: {
   brandColor: string;
   accentColor: string | null;
   colors: Record<string, Record<string, string>>;
+  dark?: boolean;
 }): Record<string, Record<string, string> | string> => {
   const colors: PlFeColors = config.colors;
   const basicColors = fromBasicColors(config);
