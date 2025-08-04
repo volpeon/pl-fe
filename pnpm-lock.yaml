@@ -313,7 +313,7 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       pl-api:
-        specifier: workspace:1.0.0-rc.90
+        specifier: workspace:*
         version: link:../pl-api
       postcss:
         specifier: ^8.5.3
