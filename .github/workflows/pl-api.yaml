@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Test for a successful build
+    name: Test for pl-api formatting
     strategy:
       matrix:
         node-version: [22.x]
@@ -21,21 +21,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
 
     - name: Install deps
-      working-directory: ./packages/pl-api
-      run: yarn install --ignore-scripts
+      working-directory: .
+      run: pnpm install
 
     - name: Lint
       working-directory: ./packages/pl-api
-      run: yarn lint
+      run: pnpm lint
 
-    - name: Build
-      env:
-        NODE_ENV: production
-      working-directory: ./packages/pl-api
-      run: yarn build

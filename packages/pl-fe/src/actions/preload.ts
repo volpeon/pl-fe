@@ -44,7 +44,7 @@ const preload = () =>
     dispatch(preloadFromMarkup('initial-state', JSON.parse, preloadMastodon));
   };
 
-const preloadPleroma = (data: Record<string, any>) => ({
+const preloadPleroma = (data: Record<string, any>): PreloadAction => ({
   type: PLEROMA_PRELOAD_IMPORT,
   data,
 });
@@ -67,6 +67,8 @@ interface PreloadAction {
 export {
   PLEROMA_PRELOAD_IMPORT,
   MASTODON_PRELOAD_IMPORT,
+  pleromaDecoder,
+  decodeFromMarkup,
   preload,
   preloadMastodon,
   type PreloadAction,
