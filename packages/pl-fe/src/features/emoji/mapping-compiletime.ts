@@ -4,7 +4,7 @@ import type { EmojiData } from './data';
 import type { UnicodeMap } from './mapping';
 
 const require = createRequire(import.meta.url);
-const data = require('pl-emoji-mart-data/sets/17/twitter.json');
+const data = require('@emoji-mart/data/sets/14/twitter.json');
 
 const stripLeadingZeros = /^0+/;
 
@@ -84,9 +84,6 @@ const generateMappings = (emojiMap: EmojiData['emojis']): UnicodeMap => {
 
   for (const value of emojis) {
     for (const item of value.skins) {
-      if (!item) {
-        continue;
-      }
       const { unified, native } = item;
       const stripped = stripcodes(unified, native);
 

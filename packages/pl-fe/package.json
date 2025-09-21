@@ -38,7 +38,7 @@
     "not dead"
   ],
   "dependencies": {
-    "pl-emoji-mart-data": "workspace:*",
+    "@emoji-mart/data": "^1.2.1",
     "@floating-ui/react": "^0.27.2",
     "@fontsource/inter": "^5.1.1",
     "@fontsource/noto-sans-javanese": "^5.1.1",
