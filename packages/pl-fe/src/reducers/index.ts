@@ -10,10 +10,8 @@ import auth from './auth';
 import compose from './compose';
 import contexts from './contexts';
 import conversations from './conversations';
-import draft_statuses from './draft-statuses';
 import filters from './filters';
 import instance from './instance';
-import listEditor from './list-editor';
 import me from './me';
 import meta from './meta';
 import notifications from './notifications';
@@ -23,7 +21,6 @@ import plfe from './pl-fe';
 import polls from './polls';
 import push_notifications from './push-notifications';
 import shoutbox from './shoutbox';
-import status_lists from './status-lists';
 import statuses from './statuses';
 import timelines from './timelines';
 
@@ -34,11 +31,9 @@ const reducers = {
   compose,
   contexts,
   conversations,
-  draft_statuses,
   entities,
   filters,
   instance,
-  listEditor,
   me,
   meta,
   notifications,
@@ -48,7 +43,6 @@ const reducers = {
   polls,
   push_notifications,
   shoutbox,
-  status_lists,
   statuses,
   timelines,
 };

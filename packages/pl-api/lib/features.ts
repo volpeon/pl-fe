@@ -153,7 +153,7 @@ const WORDPRESS = 'WordPress';
  * @category Software
  * @see {@link https://akkoma.dev/AkkomaGang/akkoma}
  */
-const AKKOMA = 'akkoma';
+const AKKOMA = 'Akkoma';
 
 /**
  * glitch-soc, fork of Mastodon with a number of experimental features.
@@ -542,6 +542,13 @@ const getFeatures = (instance: Instance) => {
 
     circles: instance.api_versions['kmyblue_circle_history.fedibird.pl-api'] >= 1,
 
+    composeAllowHeadings: any([
+      v.software !== PLEROMA && v.software !== AKKOMA,
+      instance.pleroma.metadata.markup.allow_headings,
+    ]),
+
+    composeAllowInlineImages: instance.pleroma.metadata.markup.allow_inline_images,
+
     /**
      * Mastodon's newer solution for direct messaging.
      * @see {@link https://docs.joinmastodon.org/methods/conversations/}
@@ -877,6 +884,11 @@ const getFeatures = (instance: Instance) => {
       v.software === MASTODON,
     ]),
 
+    filtersV2BlurAction: any([
+      v.software === GOTOSOCIAL && gte(v.version, '0.20.0'),
+      v.software === MASTODON && gte(v.version, '4.4.0'),
+    ]),
+
     /**
      * Allows setting the focal point of a media attachment.
      * @see {@link https://docs.joinmastodon.org/methods/media/}
@@ -1121,6 +1133,11 @@ const getFeatures = (instance: Instance) => {
      * @see POST /api/v1/lists/:list_id/unfavourite
      */
     listsFavourites: instance.api_versions['favourite_list.fedibird.pl-api'] >= 1,
+
+    /**
+     * Can set to receive notifications for new posts in a list.
+     */
+    listsNotifications: instance.api_versions['kmyblue_list_notification.fedibird.pl-api'] >= 1,
 
     listsRepliesPolicy: any([
       v.software === FRIENDICA && gte(v.version, '2024.12.0'),
@@ -1417,6 +1434,8 @@ const getFeatures = (instance: Instance) => {
       v.software === PLEROMA,
     ]),
 
+    pleromaAdminStatusesRedact: instance.api_versions['admin_statuses_redact.pleroma.pl-api'] >= 1,
+
     /**
      * Displays a form to follow a user when logged out.
      * @see POST /main/ostatus
@@ -1525,6 +1544,7 @@ const getFeatures = (instance: Instance) => {
       v.software === MITRA,
       v.software === NEODB,
       v.software === PLEROMA,
+      v.software === SHARKEY,
       v.software === SNAC,
       v.software === TAKAHE,
       v.software === TOKI,
@@ -1539,9 +1559,12 @@ const getFeatures = (instance: Instance) => {
       v.software === ICESHRIMP_NET,
       v.software === FRIENDICA && gte(v.version, '2023.3.0'),
       v.software === SHARKEY,
+      instance.api_versions.mastodon >= 7,
       instance.api_versions['quote_posting.pleroma.pl-api'] >= 1,
       instance.feature_quote === true,
     ]),
+
+    quoteApprovalPolicies: instance.api_versions.mastodon >= 7,
 
     /**
      * Ability to boost a status to a selected scope.

@@ -3,7 +3,6 @@ import React, { Suspense, lazy, useEffect, useRef } from 'react';
 import { Redirect, Switch, useHistory, useLocation } from 'react-router-dom';
 
 import { fetchConfig } from 'pl-fe/actions/admin';
-import { fetchDraftStatuses } from 'pl-fe/actions/draft-statuses';
 import { fetchFilters } from 'pl-fe/actions/filters';
 import { fetchMarker } from 'pl-fe/actions/markers';
 import { expandNotifications } from 'pl-fe/actions/notifications';
@@ -24,6 +23,7 @@ import { useInstance } from 'pl-fe/hooks/use-instance';
 import { useLoggedIn } from 'pl-fe/hooks/use-logged-in';
 import { useOwnAccount } from 'pl-fe/hooks/use-own-account';
 import { usePlFeConfig } from 'pl-fe/hooks/use-pl-fe-config';
+import { useSettings } from 'pl-fe/hooks/use-settings';
 import AdminLayout from 'pl-fe/layouts/admin-layout';
 import ChatsLayout from 'pl-fe/layouts/chats-layout';
 import DefaultLayout from 'pl-fe/layouts/default-layout';
@@ -67,6 +67,7 @@ import {
   ChatWidget,
   Circle,
   Circles,
+  CircleTimeline,
   CommunityTimeline,
   ComposeEvent,
   Conversations,
@@ -79,6 +80,7 @@ import {
   DomainBlocks,
   Domains,
   DraftStatuses,
+  DropdownNavigation,
   EditEmail,
   EditFilter,
   EditGroup,
@@ -92,7 +94,6 @@ import {
   FavouritedStatuses,
   FederationRestrictions,
   Filters,
-  FollowRecommendations,
   FollowRequests,
   FollowedTags,
   Followers,
@@ -143,7 +144,6 @@ import {
   Settings,
   SettingsStore,
   Share,
-  SidebarMenu,
   Status,
   StatusHoverCard,
   TestTimeline,
@@ -249,6 +249,7 @@ const SwitchingColumnsArea: React.FC<ISwitchingColumnsArea> = React.memo(({ chil
 
       {features.lists && <WrappedRoute path='/lists' layout={DefaultLayout} component={Lists} content={children} />}
       {features.lists && <WrappedRoute path='/list/:id' layout={DefaultLayout} component={ListTimeline} content={children} />}
+      {features.circles && <WrappedRoute path='/circles/:id' layout={DefaultLayout} component={CircleTimeline} content={children} />}
       {features.circles && <WrappedRoute path='/circles' layout={DefaultLayout} component={Circles} content={children} />}
       {features.bookmarks && <WrappedRoute path='/bookmarks/all' layout={DefaultLayout} component={Bookmarks} content={children} />}
       {features.bookmarks && <WrappedRoute path='/bookmarks/:id' layout={DefaultLayout} component={Bookmarks} content={children} />}
@@ -257,7 +258,6 @@ const SwitchingColumnsArea: React.FC<ISwitchingColumnsArea> = React.memo(({ chil
       <WrappedRoute path='/notifications' layout={DefaultLayout} component={Notifications} content={children} />
 
       <WrappedRoute path='/search' layout={SearchLayout} component={Search} content={children} publicRoute />
-      {features.suggestions && <WrappedRoute path='/suggestions' publicRoute layout={DefaultLayout} component={FollowRecommendations} content={children} />}
       {features.profileDirectory && <WrappedRoute path='/directory' publicRoute layout={DefaultLayout} component={Directory} content={children} />}
       {features.events && <WrappedRoute path='/events/new' layout={EventsLayout} component={ComposeEvent} content={children} />}
       {features.events && <WrappedRoute path='/events' layout={EventsLayout} component={Events} content={children} />}
@@ -387,6 +387,7 @@ const UI: React.FC<IUI> = React.memo(({ children }) => {
   const vapidKey = useAppSelector(state => getVapidKey(state));
   const client = useClient();
   const instance = useInstance();
+  const { theme } = useSettings();
 
   const { isDropdownMenuOpen } = useUiStore();
   const standalone = useAppSelector(isStandalone);
@@ -411,8 +412,6 @@ const UI: React.FC<IUI> = React.memo(({ children }) => {
     if (!account) return;
 
     prefetchCustomEmojis(client);
-
-    dispatch(fetchDraftStatuses());
 
     dispatch(fetchHomeTimeline());
 
@@ -492,14 +491,14 @@ const UI: React.FC<IUI> = React.memo(({ children }) => {
     <GlobalHotkeys node={node}>
       <div ref={node} style={style}>
         <div
-          className={clsx('pointer-events-none fixed z-[90] h-screen w-screen transition', {
-            'backdrop-blur': isDragging,
+          className={clsx('⁂-dragging-area', {
+            '⁂-dragging-area--dragging': isDragging,
           })}
         />
 
-        <BackgroundShapes />
+        {(theme?.backgroundGradient ?? true) && <BackgroundShapes />}
 
-        <div className='z-10 flex min-h-screen flex-col'>
+        <div className='⁂-layout'>
           <Layout fullWidth={fullWidth}>
             <Layout.Sidebar shrink={fullWidth}>
               {!(standalone && !me) && <SidebarNavigation shrink={fullWidth} />}
@@ -511,7 +510,7 @@ const UI: React.FC<IUI> = React.memo(({ children }) => {
           </Layout>
 
           <Suspense>
-            <SidebarMenu />
+            <DropdownNavigation />
           </Suspense>
 
           {me && features.chats && (

@@ -13,12 +13,16 @@ import {
   uploadCompose,
   ignoreClearLinkSuggestion,
   suggestClearLink,
+  resetCompose,
+  changeComposeRedactingOverwrite,
 } from 'pl-fe/actions/compose';
 import DropdownMenu from 'pl-fe/components/dropdown-menu';
+import List, { ListItem } from 'pl-fe/components/list';
 import HStack from 'pl-fe/components/ui/hstack';
 import Icon from 'pl-fe/components/ui/icon';
 import Stack from 'pl-fe/components/ui/stack';
 import SvgIcon from 'pl-fe/components/ui/svg-icon';
+import Toggle from 'pl-fe/components/ui/toggle';
 import EmojiPickerDropdown from 'pl-fe/features/emoji/containers/emoji-picker-dropdown-container';
 import { ComposeEditor } from 'pl-fe/features/ui/util/async-components';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
@@ -26,6 +30,9 @@ import { useCompose } from 'pl-fe/hooks/use-compose';
 import { useDraggedFiles } from 'pl-fe/hooks/use-dragged-files';
 import { useFeatures } from 'pl-fe/hooks/use-features';
 import { useInstance } from 'pl-fe/hooks/use-instance';
+import { usePersistDraftStatus } from 'pl-fe/queries/statuses/use-draft-statuses';
+import { useModalsStore } from 'pl-fe/stores/modals';
+import toast from 'pl-fe/toast';
 
 import PreviewComposeContainer from '../containers/preview-compose-container';
 import QuotedStatusContainer from '../containers/quoted-status-container';
@@ -69,6 +76,9 @@ const messages = defineMessages({
   schedule: { id: 'compose_form.schedule', defaultMessage: 'Schedule' },
   saveChanges: { id: 'compose_form.save_changes', defaultMessage: 'Save changes' },
   preview: { id: 'compose_form.preview', defaultMessage: 'Preview post' },
+  saveDraft: { id: 'compose_form.save_draft', defaultMessage: 'Save draft' },
+  draftSaved: { id: 'compose_form.save_draft.success', defaultMessage: 'Draft saved' },
+  view: { id: 'toast.view', defaultMessage: 'View' },
   more: { id: 'compose_form.more', defaultMessage: 'More' },
 });
 
@@ -139,10 +149,12 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const { configuration } = useInstance();
+  const { closeModal } = useModalsStore();
 
   const compose = useCompose(id);
   const maxTootChars = configuration.statuses.max_characters;
   const features = useFeatures();
+  const persistDraftStatus = usePersistDraftStatus();
 
   const {
     spoiler_text: spoilerText,
@@ -215,6 +227,20 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
     dispatch(submitCompose(id, { history }, true));
   };
 
+  const handleSaveDraft = (e?: React.FormEvent<Element>) => {
+    e?.preventDefault();
+
+    persistDraftStatus(id);
+    closeModal('COMPOSE');
+    dispatch(resetCompose(id));
+    editorRef.current?.dispatchCommand(CLEAR_EDITOR_COMMAND, undefined);
+
+    toast.success(messages.draftSaved, {
+      actionLabel: messages.view,
+      actionLink: '/draft_statuses',
+    });
+  };
+
   const onSuggestionsClearRequested = () => {
     dispatch(clearComposeSuggestions(id));
   };
@@ -261,6 +287,10 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
 
   const onRejectClearLinkSuggestion = (key: string) => {
     dispatch(ignoreClearLinkSuggestion(id, key));
+  };
+
+  const handleChangeRedactingOverwrite: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    dispatch(changeComposeRedactingOverwrite(id, e.target.checked));
   };
 
   useEffect(() => {
@@ -317,13 +347,21 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
   if (features.richText) selectButtons.push(<ContentTypeButton key='compose-type-button' composeId={id} />);
   if (features.postLanguages) selectButtons.push(<LanguageDropdown key='language-dropdown' composeId={id} />);
 
-  const actionsMenu: Menu | undefined = features.createStatusPreview ? [
-    {
+  const actionsMenu: Menu | undefined = [];
+
+  if (features.createStatusPreview) {
+    actionsMenu.push({
       text: intl.formatMessage(messages.preview),
       action: handlePreview,
       icon: require('@tabler/icons/outline/eye.svg'),
-    },
-  ] : undefined;
+    });
+  }
+
+  actionsMenu.push({
+    text: intl.formatMessage(messages.saveDraft),
+    action: handleSaveDraft,
+    icon: require('@tabler/icons/outline/notes.svg'),
+  });
 
   return (
     <Stack className='w-full' space={4} ref={formRef} onClick={handleClick} element='form' onSubmit={handleSubmit}>
@@ -408,6 +446,21 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
 
           <ComposeButton type='submit' icon={publishIcon} text={publishText} disabled={!canSubmit} actionsMenu={actionsMenu} />
         </HStack>
+
+        {compose.redacting && (
+          <List>
+            <ListItem
+              className='mt-2'
+              label={<FormattedMessage id='compose.redact.overwrite_label' defaultMessage='Overwrite existing status' />}
+              hint={<FormattedMessage id='compose.redact.overwrite_hint' defaultMessage='This will replace the status with a new one, without keeping edit history. The update will not federate.' />}
+            >
+              <Toggle
+                checked={compose.redactingOverwrite}
+                onChange={handleChangeRedactingOverwrite}
+              />
+            </ListItem>
+          </List>
+        )}
       </div>
     </Stack>
   );

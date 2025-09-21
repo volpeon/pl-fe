@@ -12,7 +12,7 @@ import Text from 'pl-fe/components/ui/text';
 import AccountContainer from 'pl-fe/containers/account-container';
 import StatusContainer from 'pl-fe/containers/status-container';
 import Emojify from 'pl-fe/features/emoji/emojify';
-import { HotKeys } from 'pl-fe/features/ui/components/hotkeys';
+import { Hotkeys } from 'pl-fe/features/ui/components/hotkeys';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { useAppSelector } from 'pl-fe/hooks/use-app-selector';
 import { useInstance } from 'pl-fe/hooks/use-instance';
@@ -65,6 +65,8 @@ const icons: Partial<Record<NotificationType | 'reply', string>> = {
   participation_accepted: require('@tabler/icons/outline/calendar-event.svg'),
   bite: require('@tabler/icons/outline/pacman.svg'),
   reply: require('@tabler/icons/outline/corner-up-left.svg'),
+  quote: require('@tabler/icons/outline/quote.svg'),
+  quoted_update: require('@tabler/icons/outline/pencil.svg'),
 };
 
 const messages: Record<NotificationType | 'reply', MessageDescriptor> = defineMessages({
@@ -148,6 +150,14 @@ const messages: Record<NotificationType | 'reply', MessageDescriptor> = defineMe
     id: 'notification.reply',
     defaultMessage: '{name} replied to your post',
   },
+  quote: {
+    id: 'notification.quote',
+    defaultMessage: '{name} quoted your post',
+  },
+  quoted_update: {
+    id: 'notification.quoted_update',
+    defaultMessage: '{name} edited a post you quoted',
+  },
 });
 
 const buildMessage = (
@@ -190,7 +200,7 @@ interface INotification {
 }
 
 const getNotificationStatus = (n: Pick<NotificationGroup, 'type'> & ({ status: StatusEntity } | { })): StatusEntity | null => {
-  if (['mention', 'status', 'reblog', 'favourite', 'poll', 'update', 'emoji_reaction', 'event_reminder', 'participation_accepted', 'participation_request', 'bite'].includes(n.type))
+  if (['mention', 'status', 'reblog', 'favourite', 'poll', 'update', 'emoji_reaction', 'event_reminder', 'participation_accepted', 'participation_request', 'bite', 'quote', 'quoted_update'].includes(n.type))
     // @ts-ignore
     return n.status;
   return null;
@@ -204,7 +214,7 @@ const Notification: React.FC<INotification> = (props) => {
   const getNotification = useCallback(makeGetNotification(), []);
 
   const { me } = useLoggedIn();
-  const { toggleStatusMediaHidden } = useStatusMetaStore();
+  const { toggleStatusesMediaHidden } = useStatusMetaStore();
   const { openModal } = useModalsStore();
   const { settings } = useSettingsStore();
 
@@ -288,7 +298,7 @@ const Notification: React.FC<INotification> = (props) => {
 
   const handleHotkeyToggleSensitive = useCallback(() => {
     if (status && typeof status === 'object') {
-      toggleStatusMediaHidden(status.id);
+      toggleStatusesMediaHidden([status.id]);
     }
   }, [status]);
 
@@ -398,6 +408,8 @@ const Notification: React.FC<INotification> = (props) => {
       case 'event_reminder':
       case 'participation_accepted':
       case 'participation_request':
+      case 'quote':
+      case 'quoted_update':
         return status ? (
           <StatusContainer
             id={status.id}
@@ -431,14 +443,14 @@ const Notification: React.FC<INotification> = (props) => {
   );
 
   return (
-    <HotKeys handlers={handlers} data-testid='notification' attachRef={node}>
+    <Hotkeys handlers={handlers} data-testid='notification'>
       <div
-        className='notification focusable'
+        className='notification'
         tabIndex={0}
         aria-label={ariaLabel}
         ref={node}
       >
-        <div className='focusable p-4'>
+        <div className='p-4'>
           <div className='mb-2'>
             <HStack alignItems='center' space={3}>
               <div
@@ -479,7 +491,7 @@ const Notification: React.FC<INotification> = (props) => {
           </div>
         </div>
       </div>
-    </HotKeys>
+    </Hotkeys>
   );
 };
 

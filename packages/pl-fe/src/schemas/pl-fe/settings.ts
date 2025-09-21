@@ -60,6 +60,8 @@ const settingsSchema = v.object({
     accentColor: v.optional(v.string()),
     colors: v.optional(v.any()),
     interfaceSize: v.fallback(v.picklist(['sm', 'md', 'lg', 'xl']), 'md'),
+    backgroundGradient: v.optional(v.boolean(), true),
+    systemDarkThemePreference: v.fallback(v.picklist(['dark', 'black']), 'black'),
   }), undefined),
 
   systemFont: v.fallback(v.boolean(), false),
@@ -90,6 +92,10 @@ const settingsSchema = v.object({
 
   remote_timeline: coerceObject({
     pinnedHosts: v.optional(v.array(v.string()), []),
+  }),
+
+  threads: coerceObject({
+    displayMode: v.optional(v.picklist(['tree', 'linear']), 'tree'),
   }),
 
   notifications: coerceObject({

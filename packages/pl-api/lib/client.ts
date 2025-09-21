@@ -25,6 +25,7 @@ import {
   announcementSchema,
   antennaSchema,
   applicationSchema,
+  authorizationServerMetadataSchema,
   backupSchema,
   bookmarkFolderSchema,
   chatMessageSchema,
@@ -89,6 +90,7 @@ import {
   tokenSchema,
   translationSchema,
   trendsLinkSchema,
+  userInfoSchema,
   webPushSubscriptionSchema,
 } from './entities';
 import { coerceObject, filteredArray } from './entities/utils';
@@ -168,7 +170,7 @@ import type {
   GetChatMessagesParams,
   GetChatsParams,
 } from './params/chats';
-import type { GetCircleStatusesParams } from './params/circles';
+import type { GetCircleAccountsParams, GetCircleStatusesParams } from './params/circles';
 import type { UpdateFileParams } from './params/drive';
 import type {
   CreateEventParams,
@@ -241,6 +243,7 @@ import type {
 } from './params/settings';
 import type {
   CreateStatusParams,
+  EditInteractionPolicyParams,
   EditStatusParams,
   GetFavouritedByParams,
   GetRebloggedByParams,
@@ -599,6 +602,23 @@ class PlApiClient {
       this.#socket?.close();
 
       return response.json as {};
+    },
+
+    /**
+     * Retrieve user information
+     * Retrieves standardised OIDC claims about the currently authenticated user.
+     * see {@link https://docs.joinmastodon.org/methods/oauth/#userinfo}
+     */
+    userinfo: async () => {
+      const response = await this.request('/oauth/userinfo');
+
+      return v.parse(userInfoSchema, response.json);
+    },
+
+    authorizationServerMetadata: async () => {
+      const response = await this.request('/.well-known/oauth-authorization-server');
+
+      return v.parse(authorizationServerMetadataSchema, response.json);
     },
 
     /**
@@ -2375,6 +2395,8 @@ class PlApiClient {
         fixedParams.circle_id = params.visibility.slice(7);
         fixedParams.visibility = 'circle';
       }
+      if (params.quote_id && this.#instance.api_versions.mastodon >= 7) params.quoted_status_id = params.quote_id;
+      else if (params.quoted_status_id && (this.#instance.api_versions.mastodon || 0) < 7) params.quote_id = params.quoted_status_id;
 
       const input = params.preview && this.features.version.software === MITRA
         ? '/api/v1/statuses/preview'
@@ -2574,6 +2596,17 @@ class PlApiClient {
     },
 
     /**
+     * Revoke a quote post
+     * Revoke quote authorization of status `quoting_status_id`, detaching status `id`.
+     * @see {@link https://docs.joinmastodon.org/methods/statuses/#revoke_quote}
+     */
+    revokeQuote: async (statusId: string, quotingStatusId: string) => {
+      const response = await this.request(`/api/v1/statuses/${statusId}/quotes/${quotingStatusId}/revoke`, { method: 'POST' });
+
+      return v.parse(statusSchema, response.json);
+    },
+
+    /**
      * Mute a conversation
      * Do not receive notifications for the thread that this status is part of. Must be a thread in which you are a participant.
      * @see {@link https://docs.joinmastodon.org/methods/statuses/#mute}
@@ -2633,6 +2666,17 @@ class PlApiClient {
         fixedParams.markdown = true;
       }
 
+      const response = await this.request(`/api/v1/statuses/${statusId}`, { method: 'PUT', body: params });
+
+      return v.parse(statusSchema, response.json);
+    },
+
+    /**
+     * Edit a status' interaction policies
+     * Edit a given status to change its interaction policies. Currently, this means changing its quote approval policy.
+     * @see {@link https://docs.joinmastodon.org/methods/statuses/#edit_interaction_policy}
+     */
+    editInteractionPolicy: async (statusId: string, params: EditInteractionPolicyParams) => {
       const response = await this.request(`/api/v1/statuses/${statusId}`, { method: 'PUT', body: params });
 
       return v.parse(statusSchema, response.json);
@@ -2740,9 +2784,14 @@ class PlApiClient {
      * View quotes for a given status
      *
      * Requires features{@link Features.quotePosts}.
+     * @see {@link https://docs.joinmastodon.org/methods/statuses/#quotes}
      */
     getStatusQuotes: async (statusId: string, params?: GetStatusQuotesParams) =>
-      this.#paginatedGet(`/api/v1/pleroma/statuses/${statusId}/quotes`, { params }, statusSchema),
+      this.#paginatedGet(
+        this.#instance.api_versions.mastodon >= 7 ? `/api/v1/statuses/${statusId}/quotes` : `/api/v1/pleroma/statuses/${statusId}/quotes`,
+        { params },
+        statusSchema,
+      ),
 
     /**
      * Returns the list of accounts that have disliked the status as known by the current server
@@ -3942,7 +3991,7 @@ class PlApiClient {
       deleteAccount: async (accountId: string) => {
         let response;
 
-        if (this.features.mastodonAdmin) {
+        if (this.features.mastodonAdmin || this.features.version.software === MITRA) {
           response = await this.request(`/api/v1/admin/accounts/${accountId}`, { method: 'DELETE' });
         } else {
           const account = await this.admin.accounts.getAccount(accountId)!;
@@ -4387,9 +4436,33 @@ class PlApiClient {
        * @see {@link https://docs.pleroma.social/backend/development/API/admin_api/#delete-apiv1pleromaadminstatusesid}
        */
       deleteStatus: async (statusId: string) => {
-        const response = await this.request(`/api/v1/pleroma/admin/statuses/${statusId}`, { method: 'DELETE' });
+        let response;
+
+        if (this.features.version.software === MITRA) {
+          response = await this.request(`/api/v1/admin/posts/${statusId}`, { method: 'DELETE' });
+        } else {
+          response = await this.request(`/api/v1/pleroma/admin/statuses/${statusId}`, { method: 'DELETE' });
+        }
 
         return response.json as {};
+      },
+
+      /**
+       * Requires features{@link Features.pleromaAdminStatusesRedact}
+       */
+      redactStatus: async (statusId: string, params: EditStatusParams & { overwrite?: boolean }) => {
+        const response = await this.request(`/api/v1/pleroma/admin/statuses/${statusId}/redact`, { method: 'PATCH', body: params });
+
+        return v.parse(statusSchema, response.json);
+      },
+
+      /**
+       * Requires features{@link Features.pleromaAdminStatusesRedact}
+       */
+      getStatusSource: async (statusId: string) => {
+        const response = await this.request(`/api/v1/pleroma/admin/statuses/${statusId}/source`);
+
+        return v.parse(statusSourceSchema, response.json);
       },
     },
 
@@ -5618,6 +5691,39 @@ class PlApiClient {
       const response = await this.request<{}>(`/api/v1/circles/${circleId}`, { method: 'DELETE' });
 
       return response.json;
+    },
+
+    /**
+     * View accounts in a circle
+     * Requires features{@link Features.circles}.
+     */
+    getCircleAccounts: async (circleId: string, params?: GetCircleAccountsParams) =>
+      this.#paginatedGet(`/api/v1/circles/${circleId}/accounts`, { params }, accountSchema),
+
+    /**
+     * Add accounts to a circle
+     * Add accounts to the given circle. Note that the user must be following these accounts.
+     * Requires features{@link Features.circles}.
+     */
+    addCircleAccounts: async (circleId: string, accountIds: string[]) => {
+      const response = await this.request(`/api/v1/circles/${circleId}/accounts`, {
+        method: 'POST', body: { account_ids: accountIds },
+      });
+
+      return response.json as {};
+    },
+
+    /**
+     * Remove accounts from circle
+     * Remove accounts from the given circle.
+     * Requires features{@link Features.circles}.
+     */
+    deleteCircleAccounts: async (circleId: string, accountIds: string[]) => {
+      const response = await this.request(`/api/v1/circles/${circleId}/accounts`, {
+        method: 'DELETE', body: { account_ids: accountIds },
+      });
+
+      return response.json as {};
     },
 
     getCircleStatuses: (circleId: string, params: GetCircleStatusesParams) =>

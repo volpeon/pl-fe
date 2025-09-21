@@ -1,0 +1,77 @@
+@mixin text($family: sans, $size: md, $theme: default, $tracking: normal, $transform: normal, $truncate: false, $weight: normal) {
+  @if $family == sans {
+    @apply font-sans;
+  } @else if $family == mono {
+    @apply font-mono;
+  } @else {
+    @warn "Unknown font family `#{$family}`.";
+  }
+
+  @if $size == sm {
+    @apply text-sm;
+  } @else if $size == md {
+    @apply text-base leading-5;
+  } @else if $size == lg {
+    @apply text-lg;
+  } @else if $size == xl {
+    @apply text-xl;
+  } @else if $size == 2xl {
+    @apply text-2xl;
+  } @else if $size == 3xl {
+    @apply text-3xl;
+  } @else {
+    @warn "Unknown font size `#{$size}`.";
+  }
+
+  @if $theme == default {
+    @apply text-gray-900 dark:text-gray-100;
+  } @else if $theme == danger {
+    @apply text-danger-600;
+  } @else if $theme == primary {
+    @apply text-primary-600 dark:text-accent-blue;
+  } @else if $theme == muted {
+    @apply text-gray-700 dark:text-gray-600;
+  } @else if $theme == subtle {
+    @apply text-gray-400 dark:text-gray-500;
+  } @else if $theme == success {
+    @apply text-success-600;
+  } @else if $theme == inherit {
+    @apply text-inherit;
+  } @else if $theme == white {
+    @apply text-white;
+  } @else {
+    @warn "Unknown text theme `#{$theme}`.";
+  }
+
+  @if $tracking == normal {
+    @apply tracking-normal;
+  } @else if $tracking == wide {
+    @apply tracking-wide;
+  } @else {
+    @warn "Unknown letter spacing `#{$tracking}`.";
+  }
+
+  @if $transform == normal {
+    @apply normal-case;
+  } @else if $transform == uppercase {
+    @apply uppercase;
+  } @else {
+    @warn "Unknown text transform `#{$transform}`.";
+  }
+
+  @if $truncate {
+    @apply truncate;
+  }
+
+  @if $weight == normal {
+    @apply font-normal;
+  } @else if $weight == medium {
+    @apply font-medium;
+  } @else if $weight == semibold {
+    @apply font-semibold;
+  } @else if $weight == bold {
+    @apply font-bold;
+  } @else {
+    @warn "Unknown font weight `#{$weight}`.";
+  }
+}

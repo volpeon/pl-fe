@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { changeListEditorExclusive, changeListEditorRepliesPolicy, changeListEditorTitle } from 'pl-fe/actions/lists';
 import List, { ListItem } from 'pl-fe/components/list';
 import Button from 'pl-fe/components/ui/button';
 import Form from 'pl-fe/components/ui/form';
@@ -10,52 +9,53 @@ import FormGroup from 'pl-fe/components/ui/form-group';
 import Input from 'pl-fe/components/ui/input';
 import Toggle from 'pl-fe/components/ui/toggle';
 import { SelectDropdown } from 'pl-fe/features/forms';
-import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
-import { useAppSelector } from 'pl-fe/hooks/use-app-selector';
 import { useFeatures } from 'pl-fe/hooks/use-features';
-import { useUpdateList } from 'pl-fe/queries/accounts/use-lists';
+import { useList, useUpdateList } from 'pl-fe/queries/accounts/use-lists';
+import toast from 'pl-fe/toast';
 
 const messages = defineMessages({
   save: { id: 'lists.new.save', defaultMessage: 'Save list' },
   repliesPolicyNone: { id: 'lists.replies_policy.none', defaultMessage: 'No one' },
   repliesPolicyList: { id: 'lists.replies_policy.list', defaultMessage: 'Members of the list' },
   repliesPolicyFollowed: { id: 'lists.replies_policy.followed', defaultMessage: 'Any followed user' },
+  success: { id: 'lists.edit.success', defaultMessage: 'List updated successfully' },
+  error: { id: 'lists.edit.error', defaultMessage: 'Error updating list' },
 });
 
 interface IListForm {
+  listId: string;
   onTabChange: (tab: 'members') => void;
 }
 
 const ListForm: React.FC<IListForm> = ({
+  listId,
   onTabChange,
 }) => {
   const intl = useIntl();
-  const dispatch = useAppDispatch();
   const features = useFeatures();
 
-  const { title: value, listId, repliesPolicy, exclusive } = useAppSelector((state) => state.listEditor);
-
+  const { data: list } = useList(listId);
   const { mutate: updateList, isPending: disabled } = useUpdateList(listId!);
 
-  const handleChange: React.ChangeEventHandler<HTMLInputElement> = e => {
-    dispatch(changeListEditorTitle(e.target.value));
-  };
+  const [title, setTitle] = useState(list!.title);
+  const [repliesPolicy, setRepliesPolicy] = useState(list!.replies_policy);
+  const [exclusive, setExclusive] = useState(list!.exclusive);
+  const [notify, setNotify] = useState(list!.notify);
 
   const handleSubmit: React.FormEventHandler<Element> = e => {
     e.preventDefault();
-    updateList({ title: value, replies_policy: repliesPolicy, exclusive });
+    handleUpdate();
   };
 
-  const handleClick = () => {
-    updateList({ title: value, replies_policy: repliesPolicy, exclusive });
-  };
-
-  const handleChangeRepliesPolicy = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    dispatch(changeListEditorRepliesPolicy(e.target.value as 'none'));
-  };
-
-  const handleChangeExclusive = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(changeListEditorExclusive(e.target.checked));
+  const handleUpdate = () => {
+    updateList({ title, replies_policy: repliesPolicy, exclusive, notify }, {
+      onSuccess: () => {
+        toast.success(intl.formatMessage(messages.success));
+      },
+      onError: () => {
+        toast.error(intl.formatMessage(messages.error));
+      },
+    });
   };
 
   return (
@@ -66,8 +66,8 @@ const ListForm: React.FC<IListForm> = ({
         <Input
           outerClassName='grow'
           type='text'
-          value={value}
-          onChange={handleChange}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
       </FormGroup>
 
@@ -85,7 +85,7 @@ const ListForm: React.FC<IListForm> = ({
                 followed: intl.formatMessage(messages.repliesPolicyFollowed),
               }}
               defaultValue={repliesPolicy || 'list'}
-              onChange={handleChangeRepliesPolicy}
+              onChange={(e) => setRepliesPolicy(e.target.value as 'none')}
             />
           </ListItem>
         )}
@@ -97,7 +97,19 @@ const ListForm: React.FC<IListForm> = ({
           >
             <Toggle
               checked={exclusive}
-              onChange={handleChangeExclusive}
+              onChange={(e) => setExclusive(e.target.checked)}
+            />
+          </ListItem>
+        )}
+
+        {features.listsNotifications && (
+          <ListItem
+            label={<FormattedMessage id='lists.notifications' defaultMessage='Subscribe' />}
+            hint={<FormattedMessage id='lists.notifications_hint' defaultMessage='Receive notifications for new posts in the list.' />}
+          >
+            <Toggle
+              checked={notify}
+              onChange={(e) => setNotify(e.target.checked)}
             />
           </ListItem>
         )}
@@ -109,7 +121,7 @@ const ListForm: React.FC<IListForm> = ({
       </List>
 
       <FormActions>
-        <Button onClick={handleClick} disabled={disabled}>
+        <Button onClick={handleUpdate} disabled={disabled}>
           <FormattedMessage id='lists.edit.save' defaultMessage='Save list' />
         </Button>
       </FormActions>

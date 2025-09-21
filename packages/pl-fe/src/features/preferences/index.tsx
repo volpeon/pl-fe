@@ -17,6 +17,7 @@ import { useInstance } from 'pl-fe/hooks/use-instance';
 import { usePlFeConfig } from 'pl-fe/hooks/use-pl-fe-config';
 import { useSettings } from 'pl-fe/hooks/use-settings';
 import { PaletteListItem } from 'pl-fe/pages/dashboard/theme-editor';
+import sourceCode from 'pl-fe/utils/code';
 import colors from 'pl-fe/utils/colors';
 import { isStandalone } from 'pl-fe/utils/state';
 
@@ -107,6 +108,8 @@ const messages = defineMessages({
   content_type_html: { id: 'preferences.options.content_type_html', defaultMessage: 'HTML' },
   content_type_wysiwyg: { id: 'preferences.options.content_type_wysiwyg', defaultMessage: 'WYSIWYG' },
   brandColor: { id: 'preferences.options.brand_color', defaultMessage: 'Base color' },
+  dark: { id: 'theme_toggle.dark', defaultMessage: 'Dark' },
+  black: { id: 'theme_toggle.black', defaultMessage: 'Black' },
 });
 
 const debouncedSave = debounce((dispatch: AppDispatch) => {
@@ -166,6 +169,11 @@ const Preferences = () => {
     private: intl.formatMessage(messages.privacy_followers_only),
   }), [settings.locale]);
 
+  const systemDarkThemePreferenceOptions = React.useMemo(() => ({
+    dark: intl.formatMessage(messages.dark),
+    black: intl.formatMessage(messages.black),
+  }), [settings.locale]);
+
   const defaultContentTypeOptions = React.useMemo(() => {
     const postFormats = instance.pleroma.metadata.post_formats;
 
@@ -207,6 +215,22 @@ const Preferences = () => {
             <StepSlider value={INTERFACE_SIZES.indexOf(settings.theme?.interfaceSize || 'md')} steps={4} onChange={onInterfaceSizeChange} />
           </div>
         </ListItem>
+        <ListItem label={<FormattedMessage id='preferences.fields.theme.display_background_gradient' defaultMessage='Display background gradient' />}>
+          <SettingToggle settings={settings} settingPath={['theme', 'backgroundGradient']} defaultValue onChange={onToggleChange} />
+        </ListItem>
+        {settings.themeMode === 'system' && (
+          <ListItem
+            label={<FormattedMessage id='preferences.fields.theme.dark_theme_preference_label' defaultMessage='Dark theme preference' />}
+            hint={<FormattedMessage id='preferences.fields.theme.dark_theme_preference_hint' defaultMessage='Select dark theme to be used when theme is set to "System"' />}
+          >
+            <SelectDropdown
+              className='max-w-[200px]'
+              items={systemDarkThemePreferenceOptions}
+              defaultValue={settings.theme?.systemDarkThemePreference || 'black'}
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => onSelectChange(event, ['theme', 'systemDarkThemePreference'])}
+            />
+          </ListItem>
+        )}
       </List>
 
       <HStack justifyContent='end'>
@@ -216,7 +240,21 @@ const Preferences = () => {
       </HStack>
 
       <List>
-        <ListItem label={<FormattedMessage id='preferences.fields.language_label' defaultMessage='Display language' />}>
+        <ListItem
+          label={<FormattedMessage id='preferences.fields.language_label' defaultMessage='Display language' />}
+          hint={
+            <FormattedMessage
+              id='preferences.fields.language_hint'
+              defaultMessage='You can help translating the {software} interface into your language on <link>Weblate</link>.'
+              values={{
+                software: sourceCode.displayName,
+                link: (children: React.ReactNode) => (
+                  <a className='underline' href='https://hosted.weblate.org/projects/pl-fe/pl-fe/' rel='noopener' target='_blank'>{children}</a>
+                ),
+              }}
+            />
+          }
+        >
           <SelectDropdown
             className='max-w-[200px]'
             items={languages}

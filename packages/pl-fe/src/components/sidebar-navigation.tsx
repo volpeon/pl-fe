@@ -17,7 +17,10 @@ import { useFollowRequestsCount } from 'pl-fe/queries/accounts/use-follow-reques
 import { usePendingUsersCount } from 'pl-fe/queries/admin/use-accounts';
 import { usePendingReportsCount } from 'pl-fe/queries/admin/use-reports';
 import { scheduledStatusesCountQueryOptions } from 'pl-fe/queries/statuses/scheduled-statuses';
+import { useDraftStatusesCountQuery } from 'pl-fe/queries/statuses/use-draft-statuses';
 import { useInteractionRequestsCount } from 'pl-fe/queries/statuses/use-interaction-requests';
+import { useModalsStore } from 'pl-fe/stores/modals';
+import sourceCode from 'pl-fe/utils/code';
 
 import Account from './account';
 import DropdownMenu, { Menu } from './dropdown-menu';
@@ -38,6 +41,9 @@ const messages = defineMessages({
   drafts: { id: 'navigation.drafts', defaultMessage: 'Drafts' },
   conversations: { id: 'navigation.direct_messages', defaultMessage: 'Direct messages' },
   interactionRequests: { id: 'navigation.interaction_requests', defaultMessage: 'Interaction requests' },
+  help: { id: 'navigation.help', defaultMessage: 'Help' },
+  keyboardShortcuts: { id: 'navigation.keyboard_shortcuts', defaultMessage: 'Keyboard shortcuts' },
+  sourceCode: { id: 'navigation.source_code', defaultMessage: 'Source code' },
 });
 
 interface ISidebarNavigation {
@@ -49,6 +55,7 @@ interface ISidebarNavigation {
 const SidebarNavigation: React.FC<ISidebarNavigation> = React.memo(({ shrink }) => {
   const intl = useIntl();
   const { unreadChatsCount } = useStatContext();
+  const { openModal } = useModalsStore();
 
   const instance = useInstance();
   const features = useFeatures();
@@ -66,8 +73,8 @@ const SidebarNavigation: React.FC<ISidebarNavigation> = React.memo(({ shrink }) 
   const { data: awaitingApprovalCount = 0 } = usePendingUsersCount();
   const { data: pendingReportsCount = 0 } = usePendingReportsCount();
   const dashboardCount = pendingReportsCount + awaitingApprovalCount;
-  const scheduledStatusCount = useInfiniteQuery(authenticatedScheduledStatusesCountQueryOptions).data || 0;
-  const draftCount = useAppSelector((state) => Object.keys(state.draft_statuses).length);
+  const { data: scheduledStatusCount = 0 } = useInfiniteQuery(authenticatedScheduledStatusesCountQueryOptions);
+  const { data: draftCount = 0 } = useDraftStatusesCountQuery();
 
   const restrictUnauth = instance.pleroma.metadata.restrict_unauthenticated;
 
@@ -166,18 +173,34 @@ const SidebarNavigation: React.FC<ISidebarNavigation> = React.memo(({ shrink }) 
           count: draftCount,
         });
       }
+
+      menu.push(null);
+
+      menu.push({
+        icon: require('@tabler/icons/outline/help-circle.svg'),
+        text: intl.formatMessage(messages.help),
+        items: [
+          {
+            action: () => openModal('HOTKEYS'),
+            icon: require('@tabler/icons/outline/keyboard.svg'),
+            text: intl.formatMessage(messages.keyboardShortcuts),
+          },
+          {
+            href: sourceCode.url,
+            target: '_blank',
+            icon: require('@tabler/icons/outline/code.svg'),
+            text: intl.formatMessage(messages.sourceCode),
+          },
+        ],
+      });
     }
 
     return menu;
   }, [!!account, features, followRequestsCount, interactionRequestsCount, scheduledStatusCount, draftCount]);
 
   return (
-    <Stack space={4} alignItems={shrink ? 'center' : undefined}>
-      <SiteLogo
-        className={clsx('h-12 w-auto cursor-pointer', {
-          'max-w-10 h-auto': shrink,
-        })}
-      />
+    <div className={clsx('⁂-sidebar-navigation', { '⁂-sidebar-navigation__narrow': shrink })}>
+      <SiteLogo />
 
       {account && (
         <Stack space={4}>
@@ -330,7 +353,7 @@ const SidebarNavigation: React.FC<ISidebarNavigation> = React.memo(({ shrink }) 
         )}
 
         {menu.length > 0 && (
-          <DropdownMenu items={menu} placement='top'>
+          <DropdownMenu items={menu} placement='top' width='16rem'>
             <SidebarNavigationLink
               icon={require('@tabler/icons/outline/dots-circle-horizontal.svg')}
               text={<FormattedMessage id='tabs_bar.more' defaultMessage='More' />}
@@ -361,7 +384,7 @@ const SidebarNavigation: React.FC<ISidebarNavigation> = React.memo(({ shrink }) 
       {account && (
         <ComposeButton shrink={shrink} />
       )}
-    </Stack>
+    </div>
   );
 });
 

@@ -4,9 +4,9 @@ import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 import { useHistory } from 'react-router-dom';
 
 import { cancelReplyCompose } from 'pl-fe/actions/compose';
-import { saveDraftStatus } from 'pl-fe/actions/draft-statuses';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { usePrevious } from 'pl-fe/hooks/use-previous';
+import { usePersistDraftStatus } from 'pl-fe/queries/statuses/use-draft-statuses';
 import { useModalsStore } from 'pl-fe/stores/modals';
 
 import type { ModalType } from 'pl-fe/features/ui/components/modal-root';
@@ -38,6 +38,7 @@ const ModalRoot: React.FC<IModalRoot> = ({ children, onCancel, onClose, type }) 
   const history = useHistory();
   const dispatch = useAppDispatch();
 
+  const persistDraftStatus = usePersistDraftStatus();
   const { openModal } = useModalsStore();
 
   const [revealed, setRevealed] = useState(!!children);
@@ -67,10 +68,14 @@ const ModalRoot: React.FC<IModalRoot> = ({ children, onCancel, onClose, type }) 
         openModal('CONFIRM', {
           heading: isEditing
             ? <FormattedMessage id='confirmations.cancel_editing.heading' defaultMessage='Cancel post editing' />
-            : <FormattedMessage id='confirmations.cancel.heading' defaultMessage='Discard post' />,
+            : compose.draft_id
+              ? <FormattedMessage id='confirmations.cancel_draft.heading' defaultMessage='Discard draft changes' />
+              : <FormattedMessage id='confirmations.cancel.heading' defaultMessage='Discard post' />,
           message: isEditing
             ? <FormattedMessage id='confirmations.cancel_editing.message' defaultMessage='Are you sure you want to cancel editing this post? All changes will be lost.' />
-            : <FormattedMessage id='confirmations.cancel.message' defaultMessage='Are you sure you want to cancel creating this post?' />,
+            : compose.draft_id
+              ? <FormattedMessage id='confirmations.cancel_editing.message' defaultMessage='Are you sure you want to cancel editing this draft post? All changes will be lost.' />
+              : <FormattedMessage id='confirmations.cancel.message' defaultMessage='Are you sure you want to cancel creating this post?' />,
           confirm: intl.formatMessage(messages.confirm),
           onConfirm: () => {
             onClose('COMPOSE');
@@ -81,7 +86,7 @@ const ModalRoot: React.FC<IModalRoot> = ({ children, onCancel, onClose, type }) 
           },
           secondary: intl.formatMessage(messages.saveDraft),
           onSecondary: isEditing ? undefined : () => {
-            dispatch(saveDraftStatus('compose-modal'));
+            persistDraftStatus('compose-modal');
             onClose('COMPOSE');
             dispatch(cancelReplyCompose());
           },
@@ -188,39 +193,32 @@ const ModalRoot: React.FC<IModalRoot> = ({ children, onCancel, onClose, type }) 
     }
   }, [children]);
 
-  if (!visible) {
-    return (
-      <div className='z-50 transition-all' ref={ref} style={{ opacity: 0 }} />
-    );
-  }
-
   return (
     <div
       ref={ref}
-      className={clsx('fixed left-0 top-0 z-[100] size-full overflow-y-auto overflow-x-hidden transition-opacity ease-in-out', {
-        'pointer-events-none': !visible,
+      className={clsx('⁂-modal-root', {
+        '⁂-modal-root--visible': visible,
+        '⁂-modal-root--revealed': visible && revealed,
       })}
-      style={{ opacity: revealed ? 1 : 0 }}
+      data-modal-type={type}
     >
-      <div
-        role='presentation'
-        id='modal-overlay'
-        className={clsx('fixed inset-0 bg-gray-500/90 black:bg-gray-900/90 dark:bg-gray-700/90', {
-          'opacity-60': type === 'DROPDOWN_MENU',
-        })}
-        onClick={handleOnClose}
-      />
+      {visible && (
+        <>
+          <div
+            role='presentation'
+            id='modal-overlay'
+            className='⁂-modal-root__overlay'
+            onClick={handleOnClose}
+          />
 
-      <div
-        role='dialog'
-        className={clsx({
-          'my-2 mx-auto relative pointer-events-none flex items-center min-h-[calc(100%-3.5rem)]': true,
-          'p-4 md:p-0': type !== 'MEDIA',
-          '!my-0': type === 'MEDIA' || type === 'DROPDOWN_MENU',
-        })}
-      >
-        {children}
-      </div>
+          <div
+            role='dialog'
+            className='⁂-modal-root__modal'
+          >
+            {children}
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -12,9 +12,7 @@ import PinnedHostsPicker from 'pl-fe/features/remote-timeline/components/pinned-
 import Timeline from 'pl-fe/features/ui/components/timeline';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { useInstance } from 'pl-fe/hooks/use-instance';
-import { useIsMobile } from 'pl-fe/hooks/use-is-mobile';
 import { useSettings } from 'pl-fe/hooks/use-settings';
-import { useTheme } from 'pl-fe/hooks/use-theme';
 
 const messages = defineMessages({
   title: { id: 'column.public', defaultMessage: 'Fediverse timeline' },
@@ -24,14 +22,12 @@ const messages = defineMessages({
 const PublicTimelinePage = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const theme = useTheme();
 
   const instance = useInstance();
   const settings = useSettings();
   const onlyMedia = settings.timelines.public?.other.onlyMedia ?? false;
 
   const timelineId = 'public';
-  const isMobile = useIsMobile();
 
   const explanationBoxExpanded = settings.explanationBox;
   const showExplanationBox = settings.showExplanationBox;
@@ -57,10 +53,10 @@ const PublicTimelinePage = () => {
   }, [onlyMedia]);
 
   return (
-    <Column className='-mt-3 sm:mt-0' label={intl.formatMessage(messages.title)} transparent={!isMobile}>
+    <Column className='-mt-3 sm:mt-0' label={intl.formatMessage(messages.title)}>
       <PinnedHostsPicker />
 
-      {showExplanationBox && <div className='mb-4 black:mx-4'>
+      {showExplanationBox && (
         <Accordion
           headline={<FormattedMessage id='fediverse_tab.explanation_box.title' defaultMessage='What is the Fediverse?' />}
           action={dismissExplanationBox}
@@ -86,17 +82,15 @@ const PublicTimelinePage = () => {
             }}
           />
         </Accordion>
-      </div>}
+      )}
       <PullToRefresh onRefresh={handleRefresh}>
         <Timeline
-          className='black:p-0 black:sm:p-4 black:sm:pt-0'
-          loadMoreClassName='black:sm:mx-4'
+          loadMoreClassName='sm:pb-4 black:sm:pb-0 black:sm:mx-4'
           scrollKey={`${timelineId}_timeline`}
           timelineId={`${timelineId}${onlyMedia ? ':media' : ''}`}
           prefix='home'
           onLoadMore={handleLoadMore}
           emptyMessage={<FormattedMessage id='empty_column.public' defaultMessage='There is nothing here! Write something publicly, or manually follow users from other servers to fill it up' />}
-          divideType={(theme === 'black' || isMobile) ? 'border' : 'space'}
         />
       </PullToRefresh>
     </Column>

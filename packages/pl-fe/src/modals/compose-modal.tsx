@@ -3,13 +3,13 @@ import React, { useRef } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { cancelReplyCompose, uploadCompose } from 'pl-fe/actions/compose';
-import { saveDraftStatus } from 'pl-fe/actions/draft-statuses';
 import { checkComposeContent } from 'pl-fe/components/modal-root';
 import Modal from 'pl-fe/components/ui/modal';
 import { ComposeForm } from 'pl-fe/features/ui/util/async-components';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { useCompose } from 'pl-fe/hooks/use-compose';
 import { useDraggedFiles } from 'pl-fe/hooks/use-dragged-files';
+import { usePersistDraftStatus } from 'pl-fe/queries/statuses/use-draft-statuses';
 import { useModalsStore } from 'pl-fe/stores/modals';
 
 import type { BaseModalProps } from 'pl-fe/features/ui/components/modal-root';
@@ -30,8 +30,9 @@ const ComposeModal: React.FC<BaseModalProps & ComposeModalProps> = ({ onClose, c
   const node = useRef<HTMLDivElement>(null);
   const compose = useCompose(composeId);
   const { openModal } = useModalsStore();
+  const persistDraftStatus = usePersistDraftStatus();
 
-  const { id: statusId, privacy, in_reply_to: inReplyTo, quote, group_id: groupId } = compose!;
+  const { id: statusId, privacy, in_reply_to: inReplyTo, quote, group_id: groupId } = compose;
 
   const { isDragging, isDraggedOver } = useDraggedFiles(node, (files) => {
     dispatch(uploadCompose(composeId, files, intl));
@@ -42,10 +43,14 @@ const ComposeModal: React.FC<BaseModalProps & ComposeModalProps> = ({ onClose, c
       openModal('CONFIRM', {
         heading: statusId
           ? <FormattedMessage id='confirmations.cancel_editing.heading' defaultMessage='Cancel post editing' />
-          : <FormattedMessage id='confirmations.cancel.heading' defaultMessage='Discard post' />,
+          : compose.draft_id
+            ? <FormattedMessage id='confirmations.cancel_draft.heading' defaultMessage='Discard draft changes' />
+            : <FormattedMessage id='confirmations.cancel.heading' defaultMessage='Discard post' />,
         message: statusId
           ? <FormattedMessage id='confirmations.cancel_editing.message' defaultMessage='Are you sure you want to cancel editing this post? All changes will be lost.' />
-          : <FormattedMessage id='confirmations.cancel.message' defaultMessage='Are you sure you want to cancel creating this post?' />,
+          : compose.draft_id
+            ? <FormattedMessage id='confirmations.cancel_editing.message' defaultMessage='Are you sure you want to cancel editing this draft post? All changes will be lost.' />
+            : <FormattedMessage id='confirmations.cancel.message' defaultMessage='Are you sure you want to cancel creating this post?' />,
         confirm: intl.formatMessage(statusId ? messages.cancelEditing : messages.confirm),
         onConfirm: () => {
           onClose('COMPOSE');
@@ -53,7 +58,7 @@ const ComposeModal: React.FC<BaseModalProps & ComposeModalProps> = ({ onClose, c
         },
         secondary: intl.formatMessage(messages.saveDraft),
         onSecondary: statusId ? undefined : () => {
-          dispatch(saveDraftStatus(composeId));
+          persistDraftStatus(composeId);
           onClose('COMPOSE');
           dispatch(cancelReplyCompose());
         },
@@ -64,7 +69,11 @@ const ComposeModal: React.FC<BaseModalProps & ComposeModalProps> = ({ onClose, c
   };
 
   const renderTitle = () => {
-    if (statusId) {
+    if (compose.draft_id) {
+      return <FormattedMessage id='navigation_bar.compose_draft' defaultMessage='Edit draft post' />;
+    } else if (compose.redacting) {
+      return <FormattedMessage id='navigation_bar.compose_redact' defaultMessage='Redact post' />;
+    } else if (statusId) {
       return <FormattedMessage id='navigation_bar.compose_edit' defaultMessage='Edit post' />;
     } else if (privacy === 'direct') {
       return <FormattedMessage id='navigation_bar.compose_direct' defaultMessage='Direct message' />;
