@@ -47,8 +47,6 @@ interface EmojiData {
 const emojiData = data as EmojiData;
 const { emojis } = emojiData;
 
-console.log(data);
-
 export {
   type CustomEmoji,
   type Emoji,
