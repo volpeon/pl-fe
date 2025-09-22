@@ -6,33 +6,24 @@ import type { UnicodeMap } from './mapping';
 const require = createRequire(import.meta.url);
 const data = require('pl-emoji-mart-data/sets/17/twitter.json');
 
-const stripLeadingZeros = /^0+/;
-
 /*
- * Twemoji strips their hex codes from unicode codepoints to make it look "pretty"
- * - leading 0s are removed
- * - fe0f is removed unless it has 200d
- * - fe0f is NOT removed for 1f441-fe0f-200d-1f5e8-fe0f even though it has a 200d
- *
- * this is all wrong
+ * Google Noto strips their hex codes from unicode codepoints to make it look "pretty"
+ * - fe0f is removed
  */
-const blacklist = {
-  '1f441-fe0f-200d-1f5e8-fe0f': true,
-};
 
 const tweaks = {
-  '#⃣': ['23-20e3', 'hash'],
-  '*⃣': ['2a-20e3', 'keycap_star'],
-  '0⃣': ['30-20e3', 'zero'],
-  '1⃣': ['31-20e3', 'one'],
-  '2⃣': ['32-20e3', 'two'],
-  '3⃣': ['33-20e3', 'three'],
-  '4⃣': ['34-20e3', 'four'],
-  '5⃣': ['35-20e3', 'five'],
-  '6⃣': ['36-20e3', 'six'],
-  '7⃣': ['37-20e3', 'seven'],
-  '8⃣': ['38-20e3', 'eight'],
-  '9⃣': ['39-20e3', 'nine'],
+  '#⃣': ['0023-20e3', 'hash'],
+  '*⃣': ['002a-20e3', 'keycap_star'],
+  '0⃣': ['0030-20e3', 'zero'],
+  '1⃣': ['0031-20e3', 'one'],
+  '2⃣': ['0032-20e3', 'two'],
+  '3⃣': ['0033-20e3', 'three'],
+  '4⃣': ['0034-20e3', 'four'],
+  '5⃣': ['0035-20e3', 'five'],
+  '6⃣': ['0036-20e3', 'six'],
+  '7⃣': ['0037-20e3', 'seven'],
+  '8⃣': ['0038-20e3', 'eight'],
+  '9⃣': ['0039-20e3', 'nine'],
   '❤‍🔥': ['2764-fe0f-200d-1f525', 'heart_on_fire'],
   '❤‍🩹': ['2764-fe0f-200d-1fa79', 'mending_heart'],
   '👁‍🗨️': ['1f441-fe0f-200d-1f5e8-fe0f', 'eye-in-speech-bubble'],
@@ -69,13 +60,7 @@ const tweaks = {
 };
 
 const stripcodes = (unified: string, native: string) => {
-  const stripped = unified.replace(stripLeadingZeros, '');
-
-  if (unified.includes('200d') && !(unified in blacklist)) {
-    return stripped;
-  } else {
-    return stripped.replaceAll('-fe0f', '');
-  }
+  return unified.replaceAll('-fe0f', '');
 };
 
 const generateMappings = (emojiMap: EmojiData['emojis']): UnicodeMap => {

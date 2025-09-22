@@ -1,12 +1,11 @@
-// Taken from twemoji-parser
+// Adapted from twemoji-parser
 // https://github.com/twitter/twemoji-parser/blob/a97ef3994e4b88316812926844d51c296e889f76/src/index.js
 
 /** Remove Variation Selector-16 characters from emoji */
 // https://emojipedia.org/variation-selector-16/
 const removeVS16s = (rawEmoji: string): string => {
   const vs16RegExp = /\uFE0F/g;
-  const zeroWidthJoiner = String.fromCharCode(0x200d);
-  return rawEmoji.indexOf(zeroWidthJoiner) < 0 ? rawEmoji.replace(vs16RegExp, '') : rawEmoji;
+  return rawEmoji.replace(vs16RegExp, '');
 };
 
 /** Convert emoji into an array of Unicode codepoints */
