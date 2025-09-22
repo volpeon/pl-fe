@@ -1,4 +1,4 @@
-import data from '@emoji-mart/data/sets/15/twitter.json';
+import data from 'pl-emoji-mart-data/sets/17/google.json';
 
 interface NativeEmoji {
   unified: string;
@@ -46,6 +46,8 @@ interface EmojiData {
 
 const emojiData = data as EmojiData;
 const { emojis } = emojiData;
+
+console.log(data);
 
 export {
   type CustomEmoji,
