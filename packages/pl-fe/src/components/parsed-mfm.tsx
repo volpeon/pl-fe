@@ -1,6 +1,7 @@
 // ~~Shamelessly stolen~~ ported to React from Sharkey
 // https://activitypub.software/TransFem-org/Sharkey/-/blob/develop/packages/frontend/src/components/global/MkMfm.ts
 import * as mfm from '@transfem-org/sfm-js';
+import split from 'graphemesplit';
 import { clamp } from 'lodash';
 import React, { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
@@ -8,6 +9,9 @@ import { Link } from 'react-router-dom';
 import { useSettings } from 'pl-fe/hooks/use-settings';
 import { makeEmojiMap } from 'pl-fe/utils/normalizers';
 import nyaize from 'pl-fe/utils/nyaize';
+import { joinPublicPath } from 'pl-fe/utils/static';
+
+import unicodeMapping from '../features/emoji/mapping';
 
 import HashtagLink from './hashtag-link';
 import HoverAccountWrapper from './hover-account-wrapper';
@@ -43,7 +47,7 @@ interface IParsedMfm {
 
 const ParsedMfm: React.FC<IParsedMfm> = React.memo(({ text, emojis, mentions, speakAsCat }) => {
   const rootAst = mfm.parse(text);
-  const { renderAdvancedMfm, renderAnimatedMfm } = useSettings();
+  const { renderAdvancedMfm, renderAnimatedMfm, systemEmojiFont } = useSettings();
 
   const emojiMap = makeEmojiMap(emojis);
 
@@ -61,11 +65,53 @@ const ParsedMfm: React.FC<IParsedMfm> = React.memo(({ text, emojis, mentions, sp
         if (speakAsCat) text = nyaize(text);
 
         const res: (JSX.Element | string)[] = [];
-        for (const t of text.split('\n')) {
-          res.push(<br />);
-          res.push(t);
+
+        let stack = '';
+
+        const clearStack = () => {
+          if (stack.length) res.push(stack);
+          stack = '';
+        };
+
+        const splitText = split(text);
+
+        for (const index in splitText) {
+          let c = splitText[index];
+
+          // convert FE0E selector to FE0F so it can be found in unimap
+          if (c.codePointAt(c.length - 1) === 65038) {
+            c = c.slice(0, -1) + String.fromCodePoint(65039);
+          }
+
+          // unqualified emojis aren't in emoji-mart's mappings so we just add FEOF
+          const unqualified = c + String.fromCodePoint(65039);
+
+          if (!systemEmojiFont && c in unicodeMapping) {
+            clearStack();
+
+            const { unified, shortcode } = unicodeMapping[c];
+
+            res.push(
+              <img key={index} draggable={false} className='emojione transition-transform hover:scale-125' alt={c} title={`:${shortcode}:`} src={joinPublicPath(`packs/emoji/${unified}.svg`)} />,
+            );
+          } else if (!systemEmojiFont && unqualified in unicodeMapping) {
+            clearStack();
+
+            const { unified, shortcode } = unicodeMapping[unqualified];
+
+            res.push(
+              <img key={index} draggable={false} className='emojione transition-transform hover:scale-125' alt={unqualified} title={`:${shortcode}:`} src={joinPublicPath(`packs/emoji/${unified}.svg`)} />,
+            );
+          } else if (c === '\n') {
+            clearStack();
+            res.push(<br />);
+          } else {
+            stack += c;
+          }
         }
-        res.shift();
+
+        if (stack.length) res.push(stack);
+
         return res;
       }
 
