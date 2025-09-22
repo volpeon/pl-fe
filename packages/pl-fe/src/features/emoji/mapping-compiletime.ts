@@ -4,7 +4,7 @@ import type { EmojiData } from './data';
 import type { UnicodeMap } from './mapping';
 
 const require = createRequire(import.meta.url);
-const data = require('pl-emoji-mart-data/sets/17/twitter.json');
+const data = require('pl-emoji-mart-data/sets/17/google.json');
 
 /*
  * Google Noto strips their hex codes from unicode codepoints to make it look "pretty"

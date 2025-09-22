@@ -25,7 +25,7 @@ const toCodePoints = (unicodeSurrogates: string): string[] => {
       points.push(char.toString(16));
     }
   }
-  return points;
+  return points.map(c => c.padStart(4, '0'));
 };
 
 export {
