@@ -38,7 +38,6 @@
     "not dead"
   ],
   "dependencies": {
-    "pl-emoji-mart-data": "workspace:*",
     "@floating-ui/react": "^0.27.2",
     "@fontsource/inter": "^5.1.1",
     "@fontsource/noto-sans-javanese": "^5.1.1",
@@ -68,7 +67,6 @@
     "@tanstack/query-core": "^5.83.1",
     "@tanstack/react-query": "^5.62.11",
     "@transfem-org/sfm-js": "^0.24.6",
-    "@twemoji/svg": "^15.0.0",
     "@uidotdev/usehooks": "^2.4.1",
     "@vitejs/plugin-react": "^4.3.4",
     "abortcontroller-polyfill": "^1.7.8",
@@ -103,8 +101,10 @@
     "mini-css-extract-plugin": "^2.9.2",
     "multiselect-react-dropdown": "^2.0.25",
     "mutative": "^1.1.0",
+    "noto-emoji": "git+https://github.com/googlefonts/noto-emoji.git",
     "path-browserify": "^1.0.1",
     "pl-api": "workspace:*",
+    "pl-emoji-mart-data": "workspace:*",
     "postcss": "^8.5.3",
     "process": "^0.11.10",
     "punycode": "^2.1.1",

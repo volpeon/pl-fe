@@ -129,8 +129,9 @@ const config = defineConfig(({ command }) => ({
     }),
     viteStaticCopy({
       targets: [{
-        src: './node_modules/@twemoji/svg/*',
+        src: './node_modules/noto-emoji/svg/*',
         dest: 'packs/emoji/',
+        rename: (filename, ext) => `${filename.slice('emoji_'.length)}.${ext}`,
       }, {
         src: './favicon.ico',
         dest: '.',
