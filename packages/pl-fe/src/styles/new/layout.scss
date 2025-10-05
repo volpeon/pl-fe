@@ -61,8 +61,8 @@ body {
     &__icon {
       @apply relative inline-flex rounded-lg bg-primary-100 p-2 dark:bg-gray-800;
 
-      > div {
-        @apply size-5 text-primary-500;
+      > div svg {
+        @apply text-primary-500 size-5;
       }
     }
   }
@@ -80,20 +80,20 @@ body {
 
     &__accounts {
       @apply border-t-2 border-solid border-gray-100 black:border-t dark:border-gray-800;
+    }
 
-      > a {
-        @apply block py-2;
+    &__account {
+      @apply block py-2;
 
-        > div {
-          @apply pointer-events-none;
-        }
+      > div {
+        @apply pointer-events-none;
       }
     }
 
     &__add {
       @apply flex items-center space-x-1 py-2;
 
-      .⁂-icon {
+      .⁂-icon svg {
         @apply size-4 text-primary-500;
       }
     }
