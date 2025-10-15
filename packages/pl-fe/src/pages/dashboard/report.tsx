@@ -53,7 +53,7 @@ const ReportStatuses: React.FC<IReportStatuses> = ({ statusIds }) => {
             onClick={() => handleChangeIndex(index - 1)}
             className='flex size-8 items-center justify-center rounded-full bg-white/50 backdrop-blur dark:bg-gray-900/50'
           >
-            <Icon src={require('@tabler/icons/outline/chevron-left.svg')} className='size-6 text-black dark:text-white' />
+            <Icon src={require('@phosphor-icons/core/regular/caret-left.svg')} className='size-6 text-black dark:text-white' />
           </button>
         </div>
       )}
@@ -66,7 +66,7 @@ const ReportStatuses: React.FC<IReportStatuses> = ({ statusIds }) => {
             onClick={() => handleChangeIndex(index + 1)}
             className='flex size-8 items-center justify-center rounded-full bg-white/50 backdrop-blur dark:bg-gray-900/50'
           >
-            <Icon src={require('@tabler/icons/outline/chevron-right.svg')} className='size-6 text-black dark:text-white' />
+            <Icon src={require('@phosphor-icons/core/regular/caret-right.svg')} className='size-6 text-black dark:text-white' />
           </button>
         </div>
       )}
@@ -223,7 +223,7 @@ const ReportPage: React.FC<IReportPage> = (props) => {
                       </Text>
                       <IconButton
                         iconClassName='h-4 w-4'
-                        src={require('@tabler/icons/outline/x.svg')}
+                        src={require('@phosphor-icons/core/regular/x.svg')}
                         onClick={handleUnassignReport}
                         text={intl.formatMessage(messages.reportUnassign)}
                       />
@@ -232,7 +232,7 @@ const ReportPage: React.FC<IReportPage> = (props) => {
                     <IconButton
                       className='ml-auto'
                       iconClassName='h-4 w-4'
-                      src={require('@tabler/icons/outline/plus.svg')}
+                      src={require('@phosphor-icons/core/regular/plus.svg')}
                       onClick={handleSelfAssignReport}
                       text={intl.formatMessage(messages.reportAssign)}
                     />

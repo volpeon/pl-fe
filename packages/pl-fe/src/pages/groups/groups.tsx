@@ -47,7 +47,7 @@ const Groups: React.FC = () => {
         onClick={createGroup}
         theme='secondary'
       >
-        <FormattedMessage id='new_group_panel.action' defaultMessage='Create Group' />
+        <FormattedMessage id='new_group_panel.action' defaultMessage='Create group' />
       </Button>
     </Stack>
   );
@@ -57,19 +57,18 @@ const Groups: React.FC = () => {
       {!(!isLoading && groups.length === 0) && (
         <Button
           className='xl:hidden'
-          icon={require('@tabler/icons/outline/circles.svg')}
+          icon={require('@phosphor-icons/core/regular/users-three.svg')}
           onClick={createGroup}
           theme='secondary'
           block
         >
-          <FormattedMessage id='new_group_panel.action' defaultMessage='Create Group' />
+          <FormattedMessage id='new_group_panel.action' defaultMessage='Create group' />
         </Button>
       )}
 
       <ScrollableList
         scrollKey='groups'
-        emptyMessage={renderBlankslate()}
-        emptyMessageCard={false}
+        emptyMessageText={renderBlankslate()}
         itemClassName='pb-4 last:pb-0'
         isLoading={isLoading}
         showLoading={isLoading && groups.length === 0}

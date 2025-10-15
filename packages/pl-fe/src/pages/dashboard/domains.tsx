@@ -122,7 +122,7 @@ const AdminDomainsPage: React.FC = () => {
       <Stack className='gap-4'>
         <Button
           className='sm:w-fit sm:self-end'
-          icon={require('@tabler/icons/outline/plus.svg')}
+          icon={require('@phosphor-icons/core/regular/plus.svg')}
           onClick={handleCreateDomain}
           theme='secondary'
           block
@@ -132,7 +132,7 @@ const AdminDomainsPage: React.FC = () => {
         {domains && (
           <ScrollableList
             scrollKey='domains'
-            emptyMessage={emptyMessage}
+            emptyMessageText={emptyMessage}
             itemClassName='py-3 first:pt-0 last:pb-0'
             isLoading={isFetching}
             showLoading={isFetching && !domains?.length}

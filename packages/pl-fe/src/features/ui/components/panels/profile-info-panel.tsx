@@ -96,7 +96,7 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({ account, username }) =>
     return (
       <HStack alignItems='center' space={0.5}>
         <Icon
-          src={require('@tabler/icons/outline/balloon.svg')}
+          src={hasBirthday ? require('@phosphor-icons/core/regular/cake.svg') : require('@phosphor-icons/core/regular/balloon.svg')}
           className='size-4 text-gray-800 dark:text-gray-200'
         />
 
@@ -157,7 +157,7 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({ account, username }) =>
 
             {account.locked && (
               <Icon
-                src={require('@tabler/icons/outline/lock.svg')}
+                src={require('@phosphor-icons/core/regular/lock.svg')}
                 alt={intl.formatMessage(messages.account_locked)}
                 className='size-4 text-gray-600'
               />
@@ -194,7 +194,7 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({ account, username }) =>
           {account.location ? (
             <HStack alignItems='center' space={0.5}>
               <Icon
-                src={require('@tabler/icons/outline/map-pin.svg')}
+                src={require('@phosphor-icons/core/regular/map-pin.svg')}
                 className='size-4 text-gray-800 dark:text-gray-200'
               />
 
@@ -212,7 +212,7 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({ account, username }) =>
               title={intl.formatMessage(messages.pronouns, { pronouns: account.pronouns.join('/') })}
             >
               <Icon
-                src={require('@tabler/icons/outline/tags.svg')}
+                src={require('@phosphor-icons/core/regular/tag.svg')}
                 className='size-4 text-gray-800 dark:text-gray-200'
               />
 

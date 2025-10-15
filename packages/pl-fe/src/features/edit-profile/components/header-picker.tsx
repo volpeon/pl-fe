@@ -82,7 +82,7 @@ const HeaderPicker = React.forwardRef<HTMLInputElement, IMediaInput>(({
         justifyContent='center'
       >
         <Icon
-          src={require('@tabler/icons/outline/photo-plus.svg')}
+          src={require('@phosphor-icons/core/regular/upload.svg')}
           className='size-4.5'
         />
 
@@ -103,7 +103,7 @@ const HeaderPicker = React.forwardRef<HTMLInputElement, IMediaInput>(({
       {onClear && src && (
         <IconButton
           onClick={handleClear}
-          src={require('@tabler/icons/outline/x.svg')}
+          src={require('@phosphor-icons/core/regular/x.svg')}
           theme='dark'
           className='absolute right-2 top-2 z-10 hover:scale-105 hover:bg-gray-900'
           iconClassName='h-5 w-5'

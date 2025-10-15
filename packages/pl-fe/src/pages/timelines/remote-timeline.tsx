@@ -52,7 +52,7 @@ const RemoteTimelinePage: React.FC<IRemoteTimelinePage> = ({ params }) => {
 
       {!pinned && (
         <HStack className='mb-4 px-2' space={2}>
-          <IconButton iconClassName='h-5 w-5' src={require('@tabler/icons/outline/x.svg')} onClick={handleCloseClick} />
+          <IconButton iconClassName='h-5 w-5' src={require('@phosphor-icons/core/regular/x.svg')} onClick={handleCloseClick} />
           <Text>
             <FormattedMessage
               id='remote_timeline.filter_message'
@@ -68,13 +68,14 @@ const RemoteTimelinePage: React.FC<IRemoteTimelinePage> = ({ params }) => {
         scrollKey={`${timelineId}_${instance}_timeline`}
         timelineId={`${timelineId}${onlyMedia ? ':media' : ''}:${instance}`}
         onLoadMore={handleLoadMore}
-        emptyMessage={
+        emptyMessageText={
           <FormattedMessage
             id='empty_column.remote'
             defaultMessage='There is nothing here! Manually follow users from {instance} to fill it up.'
             values={{ instance }}
           />
         }
+        emptyMessageIcon={require('@phosphor-icons/core/regular/chat-centered-text.svg')}
       />
     </Column>
   );

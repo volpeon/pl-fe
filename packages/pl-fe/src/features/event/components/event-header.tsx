@@ -47,7 +47,7 @@ const messages = defineMessages({
   reblog_private: { id: 'status.reblog_private', defaultMessage: 'Repost to original audience' },
   cancel_reblog_private: { id: 'status.cancel_reblog_private', defaultMessage: 'Un-repost' },
   reblog_visibility_public: { id: 'status.reblog_visibility_public', defaultMessage: 'Public repost' },
-  reblog_visibility_unlisted: { id: 'status.reblog_visibility_unlisted', defaultMessage: 'Unlisted repost' },
+  reblog_visibility_unlisted: { id: 'status.reblog_visibility_unlisted', defaultMessage: 'Quiet public repost' },
   reblog_visibility_private: { id: 'status.reblog_visibility_private', defaultMessage: 'Followers-only repost' },
   unreblog: { id: 'event.unreblog', defaultMessage: 'Un-repost event' },
   pin: { id: 'status.pin', defaultMessage: 'Pin on profile' },
@@ -223,19 +223,19 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
       {
         text: intl.formatMessage(messages.exportIcs),
         action: handleExportClick,
-        icon: require('@tabler/icons/outline/calendar-plus.svg'),
+        icon: require('@phosphor-icons/core/regular/calendar-plus.svg'),
       },
       {
         text: intl.formatMessage(messages.copy),
         action: handleCopy,
-        icon: require('@tabler/icons/outline/link.svg'),
+        icon: require('@phosphor-icons/core/regular/clipboard.svg'),
       },
     ];
 
     if (features.federating && !account.local) {
       menu.push({
         text: intl.formatMessage(messages.external, { domain }),
-        icon: require('@tabler/icons/outline/external-link.svg'),
+        icon: require('@phosphor-icons/core/regular/arrow-square-out.svg'),
         href: status.uri,
         target: '_blank',
       });
@@ -247,7 +247,7 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
       menu.push({
         text: intl.formatMessage(status.bookmarked ? messages.unbookmark : messages.bookmark),
         action: handleBookmarkClick,
-        icon: status.bookmarked ? require('@tabler/icons/outline/bookmark-off.svg') : require('@tabler/icons/outline/bookmark.svg'),
+        icon: status.bookmarked ? require('@phosphor-icons/core/regular/bookmark.svg') : require('@phosphor-icons/core/regular/bookmark-simple.svg'),
       });
     }
 
@@ -259,17 +259,17 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
             {
               text: intl.formatMessage(messages.reblog_visibility_public),
               action: () => handleReblogClick('public'),
-              icon: require('@tabler/icons/outline/world.svg'),
+              icon: require('@phosphor-icons/core/regular/globe.svg'),
             },
             {
               text: intl.formatMessage(messages.reblog_visibility_unlisted),
               action: () => handleReblogClick('unlisted'),
-              icon: require('@tabler/icons/outline/lock-open.svg'),
+              icon: require('@phosphor-icons/core/regular/moon.svg'),
             },
             {
               text: intl.formatMessage(messages.reblog_visibility_private),
               action: () => handleReblogClick('private'),
-              icon: require('@tabler/icons/outline/lock.svg'),
+              icon: require('@phosphor-icons/core/regular/lock.svg'),
             },
           ],
         } : {
@@ -300,14 +300,14 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
         menu.push({
           text: intl.formatMessage(status.pinned ? messages.unpin : messages.pin),
           action: handlePinClick,
-          icon: status.pinned ? require('@tabler/icons/outline/pinned-off.svg') : require('@tabler/icons/outline/pin.svg'),
+          icon: status.pinned ? require('@phosphor-icons/core/regular/push-pin-slash.svg') : require('@phosphor-icons/core/regular/push-pin.svg'),
         });
       }
 
       menu.push({
         text: intl.formatMessage(messages.delete),
         action: handleDeleteClick,
-        icon: require('@tabler/icons/outline/trash.svg'),
+        icon: require('@phosphor-icons/core/regular/trash.svg'),
         destructive: true,
       });
     } else {
@@ -321,13 +321,13 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
         menu.push({
           text: intl.formatMessage(messages.chat, { name: username }),
           action: handleChatClick,
-          icon: require('@phosphor-icons/core/regular/chats.svg'),
+          icon: require('@phosphor-icons/core/regular/chats-teardrop.svg'),
         });
       } else if (features.privacyScopes) {
         menu.push({
           text: intl.formatMessage(messages.direct, { name: username }),
           action: handleDirectClick,
-          icon: require('@tabler/icons/outline/mail.svg'),
+          icon: require('@phosphor-icons/core/regular/chat-circle.svg'),
         });
       }
 
@@ -335,17 +335,17 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
       menu.push({
         text: intl.formatMessage(messages.mute, { name: username }),
         action: handleMuteClick,
-        icon: require('@tabler/icons/outline/circle-x.svg'),
+        icon: require('@phosphor-icons/core/regular/speaker-simple-x.svg'),
       });
       menu.push({
         text: intl.formatMessage(messages.block, { name: username }),
         action: handleBlockClick,
-        icon: require('@tabler/icons/outline/ban.svg'),
+        icon: require('@phosphor-icons/core/regular/prohibit.svg'),
       });
       menu.push({
         text: intl.formatMessage(messages.report, { name: username }),
         action: handleReport,
-        icon: require('@tabler/icons/outline/flag.svg'),
+        icon: require('@phosphor-icons/core/regular/flag.svg'),
       });
     }
 
@@ -355,14 +355,14 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
       menu.push({
         text: intl.formatMessage(messages.adminAccount, { name: username }),
         to: `/pl-fe/admin/accounts/${account.id}`,
-        icon: require('@tabler/icons/outline/gavel.svg'),
+        icon: require('@phosphor-icons/core/regular/gavel.svg'),
       });
 
       if (isAdmin && features.pleromaAdminStatuses) {
         menu.push({
           text: intl.formatMessage(messages.adminStatus),
           action: handleModerateStatus,
-          icon: require('@tabler/icons/outline/pencil.svg'),
+          icon: require('@phosphor-icons/core/regular/pencil-simple.svg'),
         });
       }
 
@@ -370,7 +370,7 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
         menu.push({
           text: intl.formatMessage(status.sensitive === false ? messages.markStatusSensitive : messages.markStatusNotSensitive),
           action: handleToggleStatusSensitivity,
-          icon: require('@tabler/icons/outline/alert-triangle.svg'),
+          icon: require('@phosphor-icons/core/regular/warning.svg'),
         });
       }
 
@@ -378,7 +378,7 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
         menu.push({
           text: intl.formatMessage(messages.deleteStatus),
           action: handleDeleteStatus,
-          icon: require('@tabler/icons/outline/trash.svg'),
+          icon: require('@phosphor-icons/core/regular/trash.svg'),
           destructive: true,
         });
       }
@@ -419,7 +419,7 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
 
           <DropdownMenu items={makeMenu()} placement='bottom-end'>
             <IconButton
-              src={require('@tabler/icons/outline/dots.svg')}
+              src={require('@phosphor-icons/core/regular/dots-three.svg')}
               theme='outlined'
               className='h-[30px] px-2'
               iconClassName='h-4 w-4'
@@ -439,7 +439,7 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
 
         <Stack space={1}>
           <HStack alignItems='center' space={2}>
-            <Icon src={require('@tabler/icons/outline/flag-3.svg')} />
+            <Icon src={require('@phosphor-icons/core/regular/flag-banner.svg')} />
             <span>
               <FormattedMessage
                 id='event.organized_by'
@@ -460,7 +460,7 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
 
           {event.join_mode !== 'external' || event.participants_count > 0 && (
             <HStack alignItems='center' space={2}>
-              <Icon src={require('@tabler/icons/outline/users.svg')} />
+              <Icon src={require('@phosphor-icons/core/regular/users.svg')} />
               <a href='#' className='hover:underline' onClick={handleParticipantsClick}>
                 <span>
                   <FormattedMessage
@@ -480,7 +480,7 @@ const EventHeader: React.FC<IEventHeader> = ({ status }) => {
 
           {event.location && (
             <HStack alignItems='center' space={2}>
-              <Icon src={require('@tabler/icons/outline/map-pin.svg')} />
+              <Icon src={require('@phosphor-icons/core/regular/map-pin.svg')} />
               <span>
                 {event.location.name}
               </span>

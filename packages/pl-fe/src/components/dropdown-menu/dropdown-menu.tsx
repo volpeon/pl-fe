@@ -1,4 +1,4 @@
-import { offset, Placement, useFloating, flip, arrow, shift, autoUpdate } from '@floating-ui/react';
+import { arrow, autoUpdate, flip, offset, Placement, shift, size, useFloating } from '@floating-ui/react';
 import clsx from 'clsx';
 import { supportsPassiveEvents } from 'detect-passive-events';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -151,7 +151,7 @@ const DropdownMenuContent: React.FC<IDropdownMenuContent> = ({ handleClose, item
   );
 
   return (
-    <div ref={ref}>
+    <div className='max-h-full overflow-auto' ref={ref}>
       {items?.some(item => item?.items?.length) ? (
         <ReactSwipeableViews animateHeight index={tab === undefined ? 0 : 1} style={{ width }}>
           <div className={clsx('max-w-full', { 'w-full': touchscreen })} style={{ width }}>
@@ -197,7 +197,7 @@ const DropdownMenu = (props: IDropdownMenu) => {
     onOpen,
     onShiftClick,
     placement: initialPlacement = 'top',
-    src = require('@tabler/icons/outline/dots.svg'),
+    src = require('@phosphor-icons/core/regular/dots-three.svg'),
     title = 'Menu',
     width,
   } = props;
@@ -220,6 +220,11 @@ const DropdownMenu = (props: IDropdownMenu) => {
       }),
       arrow({
         element: arrowRef,
+      }),
+      size({
+        apply: ({ availableHeight, elements }) => {
+          elements.floating.style.maxHeight = `${Math.max(50, availableHeight - 8)}px`;
+        },
       }),
     ],
     whileElementsMounted: autoUpdate,
@@ -339,8 +344,7 @@ const DropdownMenu = (props: IDropdownMenu) => {
   }
 
   const getClassName = () => {
-    const className = clsx('z-[1001] bg-white py-1 shadow-lg ease-in-out focus:outline-none black:bg-black no-reduce-motion:transition-all dark:bg-gray-900 dark:ring-2 dark:ring-primary-700', {
-      'rounded-md min-w-56 max-w-sm duration-100': true,
+    const className = clsx('', {
       'no-reduce-motion:scale-0': !(isDisplayed && isOpen),
       'scale-100': isDisplayed && isOpen,
       'origin-bottom': placement === 'top',
@@ -378,7 +382,7 @@ const DropdownMenu = (props: IDropdownMenu) => {
           <div
             data-testid='dropdown-menu'
             ref={refs.setFloating}
-            className='z-[1001] block'
+            className='⁂-dropdown-menu'
             style={{
               position: strategy,
               top: y ?? 0,
@@ -392,7 +396,7 @@ const DropdownMenu = (props: IDropdownMenu) => {
               <div
                 ref={arrowRef}
                 style={arrowProps}
-                className='pointer-events-none absolute z-[-1] size-3 bg-white black:bg-black dark:bg-gray-900'
+                className='⁂-dropdown-menu__arrow'
               />
             </div>
           </div>

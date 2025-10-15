@@ -1,6 +1,5 @@
 import { createSelector } from 'reselect';
 
-// import { getLocale } from 'pl-fe/actions/settings';
 import { Entities } from 'pl-fe/entity-store/entities';
 import { useSettingsStore } from 'pl-fe/stores/settings';
 import { getDomain } from 'pl-fe/utils/accounts';
@@ -122,51 +121,49 @@ const checkFiltered = (index: string, filters: Array<Filter>) =>
 
 type APIStatus = { id: string; username?: string };
 
-const makeGetStatus = () => {
-  return createSelector(
-    [
-      (state: RootState, { id }: APIStatus) => state.statuses[id],
-      (state: RootState, { id }: APIStatus) => state.statuses[state.statuses[id]?.reblog_id || ''] || null,
-      (state: RootState, { id }: APIStatus) => state.statuses[state.statuses[id]?.quote_id || ''] || null,
-      (state: RootState, { id }: APIStatus) => {
-        const group = state.statuses[id]?.group_id;
-        if (group) return state.entities[Entities.GROUPS]?.store[group] as Group;
-        return undefined;
-      },
-      (state: RootState, { id }: APIStatus) => state.polls[id] || null,
-      (_state: RootState, { username }: APIStatus) => username,
-      getFilters,
-      (state: RootState) => state.me,
-      (state: RootState) => state.auth.client.features,
-    ],
+const makeGetStatus = () => createSelector(
+  [
+    (state: RootState, { id }: APIStatus) => state.statuses[id],
+    (state: RootState, { id }: APIStatus) => state.statuses[state.statuses[id]?.reblog_id || ''] || null,
+    (state: RootState, { id }: APIStatus) => state.statuses[state.statuses[id]?.quote_id || ''] || null,
+    (state: RootState, { id }: APIStatus) => {
+      const group = state.statuses[id]?.group_id;
+      if (group) return state.entities[Entities.GROUPS]?.store[group] as Group;
+      return undefined;
+    },
+    (state: RootState, { id }: APIStatus) => state.polls[id] || null,
+    (_state: RootState, { username }: APIStatus) => username,
+    getFilters,
+    (state: RootState) => state.me,
+    (state: RootState) => state.auth.client.features,
+  ],
 
-    (statusBase, statusReblog, statusQuote, statusGroup, poll, username, filters, me, features) => {
+  (statusBase, statusReblog, statusQuote, statusGroup, poll, username, filters, me, features) => {
     // const locale = getLocale('en');
 
-      if (!statusBase) return null;
-      const { account } = statusBase;
-      const accountUsername = account.acct;
+    if (!statusBase) return null;
+    const { account } = statusBase;
+    const accountUsername = account.acct;
 
-      // Must be owner of status if username exists.
-      if (accountUsername !== username && username !== undefined) {
-        return null;
-      }
+    // Must be owner of status if username exists.
+    if (accountUsername !== username && username !== undefined) {
+      return null;
+    }
 
-      const filtered = features.filtersV2
-        ? statusBase.filtered
-        : features.filters && account.id !== me && checkFiltered(statusReblog?.search_index || statusBase.search_index || '', filters) || [];
+    const filtered = features.filtersV2
+      ? statusBase.filtered
+      : features.filters && account.id !== me && checkFiltered(statusReblog?.search_index || statusBase.search_index || '', filters) || [];
 
-      return {
-        ...statusBase,
-        reblog: statusReblog || null,
-        quote: statusQuote || null,
-        group: statusGroup || null,
-        poll,
-        filtered,
-      };
-    },
-  );
-};
+    return {
+      ...statusBase,
+      reblog: statusReblog || null,
+      quote: statusQuote || null,
+      group: statusGroup || null,
+      poll,
+      filtered,
+    };
+  },
+);
 
 type SelectedStatus = Exclude<ReturnType<ReturnType<typeof makeGetStatus>>, null>;
 
@@ -247,8 +244,8 @@ const makeGetOtherAccounts = () => createSelector([
 
 const getSimplePolicy = createSelector([
   (state: RootState) => state.admin.configs,
-  (state: RootState) => state.instance.pleroma.metadata.federation.mrf_simple,
-], (configs, instancePolicy) => ({
+  (state: RootState) => state.instance.pleroma.metadata.federation.mrf_simple_info,
+], (configs, instancePolicy): MRFSimple => ({
   ...instancePolicy,
   ...ConfigDB.toSimplePolicy(configs),
 }));
@@ -267,7 +264,7 @@ const getRemoteInstanceFederation = (state: RootState, host: string): HostFedera
   const simplePolicy = getSimplePolicy(state);
 
   return Object.fromEntries(
-    Object.entries(simplePolicy).map(([key, hosts]) => [key, hosts.includes(host)]),
+    Object.entries(simplePolicy).map(([key, hosts]) => [key, hosts.some(entry => entry[0] === host)]),
   ) as HostFederation;
 };
 

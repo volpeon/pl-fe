@@ -222,10 +222,10 @@ const CirclePage: React.FC = () => {
         </div>
 
         <HStack space={2}>
-          <Button onClick={onSave} icon={require('@tabler/icons/outline/download.svg')}>
+          <Button onClick={onSave} icon={require('@phosphor-icons/core/regular/download-simple.svg')}>
             <FormattedMessage id='interactions_circle.download' defaultMessage='Download' />
           </Button>
-          <Button onClick={onCompose} icon={require('@tabler/icons/outline/pencil-plus.svg')}>
+          <Button onClick={onCompose} icon={require('@phosphor-icons/core/regular/note-pencil.svg')}>
             <FormattedMessage id='interactions_circle.compose' defaultMessage='Share' />
           </Button>
         </HStack>

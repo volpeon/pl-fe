@@ -1,5 +1,5 @@
 import React from 'react';
-import { defineMessages, FormattedList, FormattedMessage, useIntl } from 'react-intl';
+import { FormattedList, FormattedMessage } from 'react-intl';
 import { useSearchParams } from 'react-router-dom-v5-compat';
 
 import { useAccount } from 'pl-fe/api/hooks/accounts/use-account';
@@ -11,14 +11,7 @@ import { useReports } from 'pl-fe/queries/admin/use-reports';
 
 import Report from '../components/report';
 
-const messages = defineMessages({
-  heading: { id: 'column.admin.reports', defaultMessage: 'Reports' },
-  modlog: { id: 'column.admin.reports.menu.moderation_log', defaultMessage: 'Moderation log' },
-  emptyMessage: { id: 'admin.reports.empty_message', defaultMessage: 'There are no open reports. If a user gets reported, they will show up here.' },
-});
-
 const Reports: React.FC = () => {
-  const intl = useIntl();
   const [params, setParams] = useSearchParams();
 
   const resolved = params.get('resolved') as any as boolean || undefined;
@@ -44,7 +37,7 @@ const Reports: React.FC = () => {
     <>
       {(accountId || targetAccountId) && (
         <HStack className='border-b border-solid border-gray-200 p-2 pb-4 dark:border-gray-800' alignItems='center' space={2}>
-          <IconButton iconClassName='h-5 w-5' src={require('@tabler/icons/outline/x.svg')} onClick={handleUnsetAccounts} />
+          <IconButton iconClassName='h-5 w-5' src={require('@phosphor-icons/core/regular/x.svg')} onClick={handleUnsetAccounts} />
           <Text>
             <FormattedMessage
               id='column.admin.reports.filter_message'
@@ -70,7 +63,7 @@ const Reports: React.FC = () => {
         scrollKey='adminReports'
         isLoading={isPending}
         showLoading={isPending}
-        emptyMessage={intl.formatMessage(messages.emptyMessage)}
+        emptyMessageText={<FormattedMessage id='admin.reports.empty_message' defaultMessage='There are no open reports. If a user gets reported, they will show up here.' />}
         hasMore={hasNextPage}
         onLoadMore={fetchNextPage}
         itemClassName='pt-4'

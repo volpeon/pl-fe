@@ -1,39 +1,35 @@
+
 import React, { useEffect } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { fetchBubbleTimeline } from 'pl-fe/actions/timelines';
-import { useBubbleStream } from 'pl-fe/api/hooks/streaming/use-bubble-stream';
+import { fetchWrenchedTimeline } from 'pl-fe/actions/timelines';
 import PullToRefresh from 'pl-fe/components/pull-to-refresh';
 import Column from 'pl-fe/components/ui/column';
 import Timeline from 'pl-fe/features/ui/components/timeline';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
-import { useFeatures } from 'pl-fe/hooks/use-features';
 import { useSettings } from 'pl-fe/hooks/use-settings';
 
 const messages = defineMessages({
-  title: { id: 'column.bubble', defaultMessage: 'Bubble timeline' },
+  title: { id: 'column.wrenched', defaultMessage: 'Recent wrenches timeline' },
 });
 
-const BubbleTimelinePage = () => {
+const WrenchedTimelinePage = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
 
-  const features = useFeatures();
   const settings = useSettings();
-  const onlyMedia = settings.timelines.bubble?.other.onlyMedia ?? false;
+  const onlyMedia = settings.timelines.wrenched?.other.onlyMedia ?? false;
 
-  const timelineId = 'bubble';
+  const timelineId = 'wrenched';
 
   const handleLoadMore = () => {
-    dispatch(fetchBubbleTimeline({ onlyMedia }, true));
+    dispatch(fetchWrenchedTimeline({ onlyMedia }, true));
   };
 
-  const handleRefresh = () => dispatch(fetchBubbleTimeline({ onlyMedia }, true));
-
-  useBubbleStream({ onlyMedia, enabled: features.bubbleTimelineStreaming });
+  const handleRefresh = () => dispatch(fetchWrenchedTimeline({ onlyMedia }, true));
 
   useEffect(() => {
-    dispatch(fetchBubbleTimeline({ onlyMedia }));
+    dispatch(fetchWrenchedTimeline({ onlyMedia }));
   }, [onlyMedia]);
 
   return (
@@ -45,12 +41,12 @@ const BubbleTimelinePage = () => {
           timelineId={`${timelineId}${onlyMedia ? ':media' : ''}`}
           prefix='home'
           onLoadMore={handleLoadMore}
-          emptyMessageText={<FormattedMessage id='empty_column.bubble' defaultMessage='There is nothing here! Write something publicly to fill it up' />}
-          emptyMessageIcon={require('@phosphor-icons/core/regular/chat-centered-text.svg')}
+          emptyMessageText={<FormattedMessage id='empty_column.wrenched' defaultMessage='There is nothing here! 🔧 a public post to fill it up' />}
+          emptyMessageIcon={require('@phosphor-icons/core/regular/wrench.svg')}
         />
       </PullToRefresh>
     </Column>
   );
 };
 
-export { BubbleTimelinePage as default };
+export { WrenchedTimelinePage as default };

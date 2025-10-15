@@ -23,6 +23,7 @@ import { useStatusMetaStore } from 'pl-fe/stores/status-meta';
 import { textForScreenReader } from 'pl-fe/utils/status';
 
 import EventPreview from './event-preview';
+import RelativeTimestamp from './relative-timestamp';
 import StatusActionBar from './status-action-bar';
 import StatusContent from './status-content';
 import StatusLanguagePicker from './status-language-picker';
@@ -50,7 +51,6 @@ interface IStatus {
   hoverable?: boolean;
   variant?: 'default' | 'rounded' | 'slim';
   showGroup?: boolean;
-  accountAction?: React.ReactElement;
   fromBookmarks?: boolean;
   className?: string;
 }
@@ -58,7 +58,6 @@ interface IStatus {
 const Status: React.FC<IStatus> = (props) => {
   const {
     status,
-    accountAction,
     avatarSize = 42,
     focusable = true,
     hoverable = true,
@@ -288,7 +287,7 @@ const Status: React.FC<IStatus> = (props) => {
       return (
         <StatusInfo
           avatarSize={avatarSize}
-          icon={<Icon src={require('@tabler/icons/outline/pinned.svg')} className='size-4 text-gray-600 dark:text-gray-400' />}
+          icon={<Icon src={require('@phosphor-icons/core/regular/push-pin.svg')} className='size-4 text-gray-600 dark:text-gray-400' />}
           text={
             <FormattedMessage id='status.pinned' defaultMessage='Pinned post' />
           }
@@ -298,7 +297,7 @@ const Status: React.FC<IStatus> = (props) => {
       return (
         <StatusInfo
           avatarSize={avatarSize}
-          icon={<Icon src={require('@tabler/icons/outline/circles.svg')} className='size-4 text-primary-600 dark:text-accent-blue' />}
+          icon={<Icon src={require('@phosphor-icons/core/regular/users-three.svg')} className='size-4 text-primary-600 dark:text-accent-blue' />}
           text={
             <FormattedMessage
               id='status.group'
@@ -383,25 +382,33 @@ const Status: React.FC<IStatus> = (props) => {
       >
         {statusInfo}
 
-        <AccountContainer
-          key={actualStatus.account_id}
-          id={actualStatus.account_id}
-          timestamp={actualStatus.created_at}
-          timestampUrl={statusUrl}
-          action={accountAction}
-          hideActions={!accountAction}
-          showEdit={!!actualStatus.edited_at}
-          showAccountHoverCard={hoverable}
-          withLinkToProfile={hoverable}
-          approvalStatus={actualStatus.approval_status}
-          avatarSize={avatarSize}
-          items={(
-            <>
-              <StatusTypeIcon visibility={actualStatus.visibility} />
-              <StatusLanguagePicker status={actualStatus} />
-            </>
-          )}
-        />
+        <div className='flex'>
+          <AccountContainer
+            key={actualStatus.account_id}
+            id={actualStatus.account_id}
+            action={
+              <div className='flex flex-row-reverse items-center gap-1 self-baseline'>
+                <Link to={statusUrl} className='hover:underline' onClick={(event) => event.stopPropagation()}>
+                  <RelativeTimestamp timestamp={actualStatus.created_at} theme='muted' size='sm' className='whitespace-nowrap' />
+                </Link>
+                <StatusTypeIcon visibility={actualStatus.visibility} />
+                <StatusLanguagePicker status={actualStatus} />
+                {!!actualStatus.edited_at && (
+                  <>
+                    <Text tag='span' theme='muted' size='sm'>&middot;</Text>
+
+                    <Icon className='size-4 text-gray-700 dark:text-gray-600' src={require('@phosphor-icons/core/regular/pencil-simple.svg')} />
+                  </>
+                )}
+              </div>
+            }
+            showAccountHoverCard={hoverable}
+            withLinkToProfile={hoverable}
+            approvalStatus={actualStatus.approval_status}
+            avatarSize={avatarSize}
+            actionAlignment='top'
+          />
+        </div>
 
         <div className='status__content-wrapper'>
           <StatusReplyMentions status={actualStatus} hoverable={hoverable} />

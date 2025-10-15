@@ -33,6 +33,7 @@ interface IInstanceFavicon {
 const messages = defineMessages({
   bot: { id: 'account.badges.bot', defaultMessage: 'Bot' },
   timeline: { id: 'account.instance_favicon', defaultMessage: 'Visit {domain} timeline' },
+  account_locked: { id: 'account.locked_info', defaultMessage: 'This account privacy status is set to locked. The owner manually reviews who can follow them.' },
 });
 
 const InstanceFavicon: React.FC<IInstanceFavicon> = ({ account, disabled }) => {
@@ -101,7 +102,6 @@ interface IAccount {
   withDate?: boolean;
   withLinkToProfile?: boolean;
   withRelationship?: boolean;
-  showEdit?: boolean;
   approvalStatus?: StatusApprovalStatus | null;
   emoji?: string;
   emojiUrl?: string;
@@ -129,7 +129,6 @@ const Account = ({
   withDate = false,
   withLinkToProfile = true,
   withRelationship = true,
-  showEdit = false,
   approvalStatus,
   emoji,
   emojiUrl,
@@ -258,6 +257,20 @@ const Account = ({
               <HStack alignItems='center' space={1}>
                 <Text theme='muted' size='sm' direction='ltr' truncate>@{username}</Text>
 
+                {!timestamp && account.locked && (
+                  <>
+                    <Icon
+                      src={require('@phosphor-icons/core/regular/lock.svg')}
+                      alt={intl.formatMessage(messages.account_locked)}
+                      className='size-4 text-gray-600'
+                    />
+
+                    {account.favicon && !disableUserProvidedMedia && (
+                      <Text tag='span' theme='muted' size='sm'>&middot;</Text>
+                    )}
+                  </>
+                )}
+
                 {account.favicon && !disableUserProvidedMedia && (
                   <InstanceFavicon account={account} disabled />
                 )}
@@ -325,6 +338,19 @@ const Account = ({
               <HStack alignItems='center' space={1}>
                 <Text theme='muted' size='sm' direction='ltr' truncate>@{username}</Text>
 
+                {!timestamp && account.locked && (
+                  <>
+                    <Icon
+                      src={require('@phosphor-icons/core/regular/lock.svg')}
+                      alt={intl.formatMessage(messages.account_locked)}
+                      className='size-4 text-gray-600'
+                    />
+                    {account.favicon && !disableUserProvidedMedia && (
+                      <Text tag='span' theme='muted' size='sm'>&middot;</Text>
+                    )}
+                  </>
+                )}
+
                 {account.favicon && !disableUserProvidedMedia && (
                   <InstanceFavicon account={account} disabled={!withLinkToProfile} />
                 )}
@@ -354,14 +380,6 @@ const Account = ({
                     </Text>
                   </>
                 )}
-
-                {showEdit ? (
-                  <>
-                    <Text tag='span' theme='muted' size='sm'>&middot;</Text>
-
-                    <Icon className='size-4 text-gray-700 dark:text-gray-600' src={require('@tabler/icons/outline/pencil.svg')} />
-                  </>
-                ) : null}
 
                 {actionType === 'muting' && account.mute_expires_at ? (
                   <>

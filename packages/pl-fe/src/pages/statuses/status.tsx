@@ -84,14 +84,14 @@ const StatusPage: React.FC<IStatusDetails> = (props) => {
       {
         text: intl.formatMessage(messages.treeView),
         action: () => dispatch(changeSetting(['threads', 'displayMode'], 'tree')),
-        icon: require('@tabler/icons/outline/list-tree.svg'),
+        icon: require('@phosphor-icons/core/regular/tree-view.svg'),
         type: 'radio',
         checked: displayMode === 'tree',
       },
       {
         text: intl.formatMessage(messages.linearView),
         action: () => dispatch(changeSetting(['threads', 'displayMode'], 'linear')),
-        icon: require('@tabler/icons/outline/list.svg'),
+        icon: require('@phosphor-icons/core/regular/list-bullets.svg'),
         type: 'radio',
         checked: displayMode === 'linear',
       },
@@ -103,7 +103,7 @@ const StatusPage: React.FC<IStatusDetails> = (props) => {
         {
           text: intl.formatMessage(messages.expandAll),
           action: expandAllStatuses,
-          icon: require('@tabler/icons/outline/chevron-down.svg'),
+          icon: require('@phosphor-icons/core/regular/caret-down.svg'),
         },
       );
     }
@@ -143,7 +143,7 @@ const StatusPage: React.FC<IStatusDetails> = (props) => {
     <Stack space={4}>
       <Column
         label={intl.formatMessage(titleMessage())}
-        action={<DropdownMenu items={items} src={require('@tabler/icons/outline/dots-vertical.svg')} />}
+        action={<DropdownMenu items={items} src={require('@phosphor-icons/core/regular/dots-three-vertical.svg')} />}
       >
         <PullToRefresh onRefresh={handleRefresh}>
           <Thread key={status.id} status={status} setExpandAllStatuses={(fn) => setExpandAllStatuses(() => fn)} />

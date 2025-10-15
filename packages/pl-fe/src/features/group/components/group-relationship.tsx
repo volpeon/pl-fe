@@ -29,8 +29,8 @@ const GroupRelationship = ({ group }: IGroupRelationship) => {
         className='size-4'
         src={
           isOwner
-            ? require('@tabler/icons/outline/users.svg')
-            : require('@tabler/icons/outline/gavel.svg')
+            ? require('@phosphor-icons/core/regular/users.svg')
+            : require('@phosphor-icons/core/regular/gavel.svg')
         }
       />
 

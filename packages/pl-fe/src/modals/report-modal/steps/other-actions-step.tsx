@@ -92,7 +92,7 @@ const OtherActionsStep = ({
 
               <div>
                 <Button
-                  icon={require('@tabler/icons/outline/arrows-minimize.svg')}
+                  icon={require('@phosphor-icons/core/regular/arrows-in-simple.svg')}
                   theme='tertiary'
                   size='sm'
                   onClick={() => setShowAdditionalStatuses(false)}
@@ -103,7 +103,7 @@ const OtherActionsStep = ({
             </Stack>
           ) : (
             <Button
-              icon={require('@tabler/icons/outline/plus.svg')}
+              icon={require('@phosphor-icons/core/regular/plus.svg')}
               theme='tertiary'
               size='sm'
               onClick={() => setShowAdditionalStatuses(true)}

@@ -114,26 +114,27 @@ const preprocess = (status: any) => {
 
   let quote: {
     state: string;
-    status: any;
+    quoted_status: any;
   } | {
     state: string;
-    status_id: string;
+    quoted_status_id: string;
   } | null = null;
 
   const quotedStatus = status.quote ?? status.pleroma?.quote;
-  const quotedStatusId = quotedStatus?.id ?? status.quote_id ?? status.pleroma?.quote_id;
+  let quotedStatusId = quotedStatus?.id ?? status.quote_id ?? status.pleroma?.quote_id;
   if (quotedStatus?.state) {
     quote = quotedStatus;
+    quotedStatusId = quotedStatus.quoted_status?.id || quotedStatus.quoted_status_id;
   } else if (quotedStatus) {
     quote = {
       state: 'accepted',
-      status: quotedStatus,
+      quoted_status: quotedStatus,
     };
   } else {
     if (quotedStatusId) {
       quote = {
         state: 'accepted',
-        status_id: quotedStatusId,
+        quoted_status_id: quotedStatusId,
       };
     }
   }

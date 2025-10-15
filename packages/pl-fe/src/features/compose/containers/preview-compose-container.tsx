@@ -57,13 +57,13 @@ const PreviewComposeContainer: React.FC<IQuotedStatusContainer> = ({ composeId }
     <OutlineBox>
       <Stack space={2}>
         <HStack space={1} alignItems='center'>
-          <Icon className='size-4 text-gray-700 dark:text-gray-600' src={require('@tabler/icons/outline/eye.svg')} />
+          <Icon className='size-4 text-gray-700 dark:text-gray-600' src={require('@phosphor-icons/core/regular/eye.svg')} />
           <Text theme='muted' size='sm' className='grow'>
             <FormattedMessage id='compose_form.preview_label' defaultMessage='Preview' />
           </Text>
 
           <IconButton
-            src={require('@tabler/icons/outline/x.svg')}
+            src={require('@phosphor-icons/core/regular/x.svg')}
             title={intl.formatMessage(messages.close)}
             onClick={handleClose}
             className='bg-transparent text-gray-600 hover:text-gray-700 dark:text-gray-600 dark:hover:text-gray-500'

@@ -86,26 +86,27 @@ const ListTimelinePage: React.FC = () => {
     {
       text: intl.formatMessage(messages.editList),
       action: handleEditClick,
-      icon: require('@tabler/icons/outline/edit.svg'),
+      icon: require('@phosphor-icons/core/regular/pencil-simple.svg'),
     },
     {
       text: intl.formatMessage(messages.deleteList),
       action: handleDeleteClick,
-      icon: require('@tabler/icons/outline/trash.svg'),
+      icon: require('@phosphor-icons/core/regular/trash.svg'),
     },
   ];
 
   return (
     <Column
       label={title}
-      action={<DropdownMenu items={items} src={require('@tabler/icons/outline/dots-vertical.svg')} />}
+      action={<DropdownMenu items={items} src={require('@phosphor-icons/core/regular/dots-three-vertical.svg')} />}
     >
       <Timeline
         loadMoreClassName='sm:pb-4 black:sm:pb-0 black:sm:mx-4'
         scrollKey='list_timeline'
         timelineId={`list:${id}`}
         onLoadMore={handleLoadMore}
-        emptyMessage={emptyMessage}
+        emptyMessageText={emptyMessage}
+        emptyMessageIcon={require('@phosphor-icons/core/regular/list-bullets.svg')}
       />
     </Column>
   );

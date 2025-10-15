@@ -7,7 +7,6 @@ import { fetchFilters } from 'pl-fe/actions/filters';
 import { fetchMarker } from 'pl-fe/actions/markers';
 import { expandNotifications } from 'pl-fe/actions/notifications';
 import { register as registerPushNotifications } from 'pl-fe/actions/push-notifications/registerer';
-import { connectShoutbox } from 'pl-fe/actions/shoutbox';
 import { fetchHomeTimeline } from 'pl-fe/actions/timelines';
 import { useUserStream } from 'pl-fe/api/hooks/streaming/use-user-stream';
 import { WITH_LANDING_PAGE } from 'pl-fe/build-config';
@@ -44,6 +43,7 @@ import { prefetchFollowRequests } from 'pl-fe/queries/accounts/use-follow-reques
 import { queryClient } from 'pl-fe/queries/client';
 import { prefetchCustomEmojis } from 'pl-fe/queries/instance/use-custom-emojis';
 import { scheduledStatusesQueryOptions } from 'pl-fe/queries/statuses/scheduled-statuses';
+import { useShoutboxSubscription } from 'pl-fe/stores/shoutbox';
 import { useUiStore } from 'pl-fe/stores/ui';
 import { getVapidKey } from 'pl-fe/utils/auth';
 import { isStandalone } from 'pl-fe/utils/state';
@@ -150,6 +150,7 @@ import {
   ThemeEditor,
   UrlPrivacy,
   UserIndex,
+  WrenchedTimeline,
 } from './util/async-components';
 import GlobalHotkeys from './util/global-hotkeys';
 import { WrappedRoute } from './util/react-router-helpers';
@@ -198,6 +199,7 @@ const SwitchingColumnsArea: React.FC<ISwitchingColumnsArea> = React.memo(({ chil
       {features.federating && <WrappedRoute path='/timeline/local' exact layout={HomeLayout} component={CommunityTimeline} content={children} publicRoute />}
       {features.federating && <WrappedRoute path='/timeline/fediverse' exact layout={HomeLayout} component={PublicTimeline} content={children} publicRoute />}
       {features.bubbleTimeline && <WrappedRoute path='/timeline/bubble' exact layout={HomeLayout} component={BubbleTimeline} content={children} publicRoute />}
+      {features.wrenchedTimeline && <WrappedRoute path='/timeline/wrenched' exact layout={HomeLayout} component={WrenchedTimeline} content={children} publicRoute />}
       {features.federating && <WrappedRoute path='/timeline/:instance' exact layout={RemoteInstanceLayout} component={RemoteTimeline} content={children} />}
 
       {features.conversations && <WrappedRoute path='/conversations' layout={DefaultLayout} component={Conversations} content={children} />}
@@ -392,6 +394,8 @@ const UI: React.FC<IUI> = React.memo(({ children }) => {
   const { isDropdownMenuOpen } = useUiStore();
   const standalone = useAppSelector(isStandalone);
 
+  useShoutboxSubscription();
+
   const { isDragging } = useDraggedFiles(node);
 
   const handleServiceWorkerPostMessage = ({ data }: MessageEvent) => {
@@ -430,10 +434,6 @@ const UI: React.FC<IUI> = React.memo(({ children }) => {
 
     if (account.locked) {
       setTimeout(() => prefetchFollowRequests(client), 700);
-    }
-
-    if (features.shoutbox) {
-      dispatch(connectShoutbox());
     }
 
     if (features.scheduledStatuses) {
@@ -498,7 +498,7 @@ const UI: React.FC<IUI> = React.memo(({ children }) => {
 
         {(theme?.backgroundGradient ?? true) && <BackgroundShapes />}
 
-        <div className='⁂-layout'>
+        <div className='⁂-layout__container'>
           <Layout fullWidth={fullWidth}>
             <Layout.Sidebar shrink={fullWidth}>
               {!(standalone && !me) && <SidebarNavigation shrink={fullWidth} />}

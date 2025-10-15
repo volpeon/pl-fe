@@ -113,14 +113,14 @@ const ChatPageMain = () => {
 
   const menuItems: Menu = [
     {
-      icon: require('@tabler/icons/outline/ban.svg'),
+      icon: require('@phosphor-icons/core/regular/prohibit.svg'),
       text: intl.formatMessage(isBlocking ? messages.unblockUser : messages.blockUser, { acct: chat.account.acct }),
       action: isBlocking ? handleUnblockUser : handleBlockUser,
     },
   ];
 
   if (features.chatsDelete) menuItems.push({
-    icon: require('@tabler/icons/outline/logout.svg'),
+    icon: require('@phosphor-icons/core/regular/sign-out.svg'),
     text: intl.formatMessage(messages.leaveChat),
     action: handleLeaveChat,
   });
@@ -154,7 +154,7 @@ const ChatPageMain = () => {
         </HStack>
 
         <DropdownMenu
-          src={require('@tabler/icons/outline/info-circle.svg')}
+          src={require('@phosphor-icons/core/regular/info.svg')}
           component={() => (
             <HStack className='px-4 py-2' alignItems='center' space={3}>
               <Avatar src={chat.account.avatar_static} alt={chat.account.avatar_description} size={50} isCat={chat.account.is_cat} username={chat.account.username} />

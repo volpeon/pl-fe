@@ -221,15 +221,15 @@ const ThemeEditorPage: React.FC<IThemeEditor> = () => {
             items={[{
               text: intl.formatMessage(messages.restore),
               action: restoreDefaultTheme,
-              icon: require('@tabler/icons/outline/refresh.svg'),
+              icon: require('@phosphor-icons/core/regular/arrows-clockwise.svg'),
             }, {
               text: intl.formatMessage(messages.import),
               action: importTheme,
-              icon: require('@tabler/icons/outline/upload.svg'),
+              icon: require('@phosphor-icons/core/regular/export.svg'),
             }, {
               text: intl.formatMessage(messages.export),
               action: exportTheme,
-              icon: require('@tabler/icons/outline/download.svg'),
+              icon: require('@phosphor-icons/core/regular/download-simple.svg'),
             }]}
           />
           <Button theme='secondary' onClick={resetTheme}>

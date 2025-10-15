@@ -142,7 +142,7 @@ const PreviewCard: React.FC<IPreviewCard> = ({
       )}
       <HStack space={1} alignItems='center'>
         <Text tag='span' theme='muted'>
-          <Icon src={require('@tabler/icons/outline/link.svg')} />
+          <Icon src={require('@phosphor-icons/core/regular/link-simple.svg')} />
         </Text>
         <Text tag='span' theme='muted' size='sm' direction={direction}>
           {card.provider_name}
@@ -176,10 +176,10 @@ const PreviewCard: React.FC<IPreviewCard> = ({
     if (embedded) {
       embed = renderVideo();
     } else {
-      let iconVariant = require('@tabler/icons/outline/player-play.svg');
+      let iconVariant = require('@phosphor-icons/core/regular/play.svg');
 
       if (card.type === 'photo') {
-        iconVariant = require('@tabler/icons/outline/zoom-in.svg');
+        iconVariant = require('@phosphor-icons/core/regular/magnifying-glass-plus.svg');
       }
 
       embed = (
@@ -206,7 +206,7 @@ const PreviewCard: React.FC<IPreviewCard> = ({
                     className='text-gray-700 hover:text-gray-900 dark:text-gray-500 dark:hover:text-gray-100'
                   >
                     <Icon
-                      src={require('@tabler/icons/outline/external-link.svg')}
+                      src={require('@phosphor-icons/core/regular/arrow-square-out.svg')}
                       className='size-6 text-inherit'
                     />
                   </a>

@@ -172,14 +172,6 @@ const GLITCH = 'glitch';
 const HOMETOWN = 'hometown';
 
 /**
- * Pl, fork of Pleroma developed by pl-api author.
- *
- * @category Software
- * @see {@link https://github.com/mkljczk/pl}
- */
-const PL = 'pl';
-
-/**
  * Backend name reserved only for tests.
  *
  * @category Software
@@ -271,7 +263,7 @@ const getFeatures = (instance: Instance) => {
      * @see PATCH /api/v1/accounts/update_credentials
      */
     accountLocation: any([
-      v.software === PLEROMA && v.build === PL,
+      instance.api_versions['account_location.pleroma.pl-api'] >= 1,
     ]),
 
     /**
@@ -537,7 +529,7 @@ const getFeatures = (instance: Instance) => {
      * @see DELETE /api/v1/pleroma/chats/:id
      */
     chatsDelete: any([
-      v.software === PLEROMA && v.build === PL,
+      instance.api_versions['chat_delete.pleroma.pl-api'] >= 1,
     ]),
 
     circles: instance.api_versions['kmyblue_circle_history.fedibird.pl-api'] >= 1,
@@ -575,6 +567,12 @@ const getFeatures = (instance: Instance) => {
       v.software === AKKOMA,
       v.software === PLEROMA,
     ]),
+
+    /**
+     * Ability to post statuses to the recipients of parent post.
+     * @see POST /api/v1/statuses
+     */
+    createStatusConversationScope: v.software === MITRA,
 
     /**
      * @see POST /api/v1/statuses
@@ -1230,7 +1228,7 @@ const getFeatures = (instance: Instance) => {
       v.software === DITTO,
       v.software === GOTOSOCIAL,
       v.software === MASTODON,
-      v.software === PLEROMA && v.build === PL,
+      instance.api_versions['mastodon_admin_api.pleroma.pl-api'] >= 1,
     ]),
 
     mastodonAdminResolveReportWithComment: v.software === GOTOSOCIAL,
@@ -1397,7 +1395,7 @@ const getFeatures = (instance: Instance) => {
     outgoingFollowRequests: any([
       v.software === GOTOSOCIAL && gte(v.version, '0.20.0'),
       v.software === ICESHRIMP_NET,
-      v.build === PL && gte(v.version, '2.8.0'),
+      instance.api_versions['outgoing_follow_requests.pleroma.pl-api'] >= 1,
     ]),
 
     pleromaAdminAccounts: any([
@@ -1694,6 +1692,7 @@ const getFeatures = (instance: Instance) => {
      */
     sessions: any([
       v.software === AKKOMA,
+      v.software === ICESHRIMP_NET,
       v.software === PLEROMA,
       v.software === GOTOSOCIAL && gte(v.version, '0.18.2'),
     ]),
@@ -1837,6 +1836,12 @@ const getFeatures = (instance: Instance) => {
       v.software === PLEROMA,
       v.software === SNAC,
     ]),
+
+    /**
+     * Can display a timeline of most recently wrenched statuses.
+     * @see GET /api/v1/pleroma/timelines/wrenched
+     */
+    wrenchedTimeline: instance.api_versions['wrenched_timeline.pleroma.pl-api'] >= 1,
   };
 };
 
@@ -1903,7 +1908,6 @@ export {
   WORDPRESS,
   GLITCH,
   HOMETOWN,
-  PL,
   UNRELEASED,
   type Features,
   type Backend as BackendVersion,

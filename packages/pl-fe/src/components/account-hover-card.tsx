@@ -93,6 +93,7 @@ const AccountHoverCard: React.FC<IAccountHoverCard> = ({ visible = true }) => {
     ],
     whileElementsMounted: autoUpdate,
   });
+  console.log(x, y, context, refs);
 
   const { styles } = useTransitionStyles(context, {
     initial: {
@@ -124,8 +125,8 @@ const AccountHoverCard: React.FC<IAccountHoverCard> = ({ visible = true }) => {
     <div
       className={clsx({
         'absolute transition-opacity w-[320px] z-[101] top-0 left-0': true,
-        'opacity-100': visible,
-        'opacity-0 pointer-events-none': !visible,
+        'opacity-100': visible && context.open,
+        'opacity-0 pointer-events-none': !visible || !context.open,
       })}
       ref={refs.setFloating}
       style={{
@@ -170,7 +171,7 @@ const AccountHoverCard: React.FC<IAccountHoverCard> = ({ visible = true }) => {
             {account.pronouns.length > 0 && (
               <HStack alignItems='center' space={0.5}>
                 <Icon
-                  src={require('@tabler/icons/outline/tags.svg')}
+                  src={require('@phosphor-icons/core/regular/tag.svg')}
                   className='size-4 text-gray-800 dark:text-gray-200'
                 />
 

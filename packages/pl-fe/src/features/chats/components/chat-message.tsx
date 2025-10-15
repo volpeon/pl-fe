@@ -128,7 +128,7 @@ const ChatMessage = (props: IChatMessage) => {
       menu.push({
         text: intl.formatMessage(messages.copy),
         action: () => handleCopyText(chatMessage),
-        icon: require('@tabler/icons/outline/copy.svg'),
+        icon: require('@phosphor-icons/core/regular/clipboard.svg'),
       });
     }
 
@@ -136,14 +136,14 @@ const ChatMessage = (props: IChatMessage) => {
       menu.push({
         text: intl.formatMessage(messages.delete),
         action: () => handleDeleteMessage.mutate(chatMessage.id),
-        icon: require('@tabler/icons/outline/trash.svg'),
+        icon: require('@phosphor-icons/core/regular/trash.svg'),
         destructive: true,
       });
     } else {
       menu.push({
         text: intl.formatMessage(messages.deleteForMe),
         action: () => handleDeleteMessage.mutate(chatMessage.id),
-        icon: require('@tabler/icons/outline/trash.svg'),
+        icon: require('@phosphor-icons/core/regular/trash.svg'),
         destructive: true,
       });
     }
@@ -187,7 +187,7 @@ const ChatMessage = (props: IChatMessage) => {
               data-testid='chat-message-menu'
             >
               <Icon
-                src={require('@tabler/icons/outline/dots.svg')}
+                src={require('@phosphor-icons/core/regular/dots-three.svg')}
                 className='size-4'
               />
             </button>

@@ -60,7 +60,7 @@ const GroupOptionsButton = ({ group }: IGroupActionButton) => {
     if (canShare) {
       items.push({
         text: intl.formatMessage(messages.share),
-        icon: require('@tabler/icons/outline/share.svg'),
+        icon: require('@phosphor-icons/core/regular/export.svg'),
         action: handleShare,
       });
     }
@@ -69,7 +69,7 @@ const GroupOptionsButton = ({ group }: IGroupActionButton) => {
       items.push(null);
       items.push({
         text: intl.formatMessage(messages.leave),
-        icon: require('@tabler/icons/outline/logout.svg'),
+        icon: require('@phosphor-icons/core/regular/sign-out.svg'),
         action: handleLeave,
       });
     }
@@ -84,7 +84,7 @@ const GroupOptionsButton = ({ group }: IGroupActionButton) => {
   return (
     <DropdownMenu items={menu} placement='bottom'>
       <IconButton
-        src={require('@tabler/icons/outline/dots.svg')}
+        src={require('@phosphor-icons/core/regular/dots-three.svg')}
         theme='secondary'
         iconClassName='h-5 w-5'
         className='self-stretch px-2.5'

@@ -16,14 +16,16 @@ import type { Circle, Features } from 'pl-api';
 const messages = defineMessages({
   public_short: { id: 'privacy.public.short', defaultMessage: 'Public' },
   public_long: { id: 'privacy.public.long', defaultMessage: 'Post to public timelines' },
-  unlisted_short: { id: 'privacy.unlisted.short', defaultMessage: 'Unlisted' },
-  unlisted_long: { id: 'privacy.unlisted.long', defaultMessage: 'Do not post to public timelines' },
+  unlisted_short: { id: 'privacy.unlisted.short', defaultMessage: 'Quiet public' },
+  unlisted_long: { id: 'privacy.unlisted.long', defaultMessage: 'Not visible in public timelines' },
   private_short: { id: 'privacy.private.short', defaultMessage: 'Followers-only' },
   private_long: { id: 'privacy.private.long', defaultMessage: 'Post to followers only' },
+  conversation_short: { id: 'privacy.conversation.short', defaultMessage: 'Conversation' },
+  conversation_long: { id: 'privacy.conversation.long', defaultMessage: 'Post to recipients of the parent post' },
   mutuals_only_short: { id: 'privacy.mutuals_only.short', defaultMessage: 'Mutuals-only' },
   mutuals_only_long: { id: 'privacy.mutuals_only.long', defaultMessage: 'Post to mutually followed users only' },
-  direct_short: { id: 'privacy.direct.short', defaultMessage: 'Direct' },
-  direct_long: { id: 'privacy.direct.long', defaultMessage: 'Post to mentioned users only' },
+  direct_short: { id: 'privacy.direct.short', defaultMessage: 'Private mention' },
+  direct_long: { id: 'privacy.direct.long', defaultMessage: 'Visible to mentioned users only' },
   local_short: { id: 'privacy.local.short', defaultMessage: 'Local-only' },
   local_long: { id: 'privacy.local.long', defaultMessage: 'Only visible on your instance' },
   list_short: { id: 'privacy.list.short', defaultMessage: 'List only' },
@@ -45,7 +47,7 @@ interface Option {
   items?: Array<Omit<Option, 'items'>>;
 }
 
-const getItems = (features: Features, lists: ReturnType<typeof getOrderedLists>, circles: Array<Circle>, intl: IntlShape) => [
+const getItems = (features: Features, lists: ReturnType<typeof getOrderedLists>, circles: Array<Circle>, isReply: boolean, intl: IntlShape) => [
   {
     icon: require('@phosphor-icons/core/regular/globe.svg'),
     value: 'public',
@@ -53,7 +55,7 @@ const getItems = (features: Features, lists: ReturnType<typeof getOrderedLists>,
     meta: intl.formatMessage(messages.public_long),
   },
   {
-    icon: require('@phosphor-icons/core/regular/lock-open.svg'),
+    icon: require('@phosphor-icons/core/regular/moon.svg'),
     value: 'unlisted',
     text: intl.formatMessage(messages.unlisted_short),
     meta: intl.formatMessage(messages.unlisted_long),
@@ -64,6 +66,12 @@ const getItems = (features: Features, lists: ReturnType<typeof getOrderedLists>,
     text: intl.formatMessage(messages.private_short),
     meta: intl.formatMessage(messages.private_long),
   },
+  isReply && features.createStatusConversationScope ? {
+    icon: require('@phosphor-icons/core/regular/chats-circle.svg'),
+    value: 'conversation',
+    text: intl.formatMessage(messages.conversation_short),
+    meta: intl.formatMessage(messages.conversation_long),
+  } : undefined,
   features.createStatusMutualsOnlyScope ? {
     icon: require('@phosphor-icons/core/regular/users-three.svg'),
     value: 'mutuals_only',
@@ -77,7 +85,7 @@ const getItems = (features: Features, lists: ReturnType<typeof getOrderedLists>,
     meta: intl.formatMessage(messages.subscribers_long),
   } : undefined,
   {
-    icon: require('@phosphor-icons/core/regular/envelope-simple.svg'),
+    icon: require('@phosphor-icons/core/regular/at.svg'),
     value: 'direct',
     text: intl.formatMessage(messages.direct_short),
     meta: intl.formatMessage(messages.direct_long),
@@ -127,13 +135,15 @@ const PrivacyDropdown: React.FC<IPrivacyDropdown> = ({
   const { data: lists = [] } = useLists(getOrderedLists);
   const { data: circles = [] } = useCircles(getOrderedLists);
 
+  const isReply = !!compose.in_reply_to;
+
   const value = compose.privacy;
   const unavailable = compose.id;
 
   const onChange = (value: string) => value && dispatch(changeComposeVisibility(composeId,
     value));
 
-  const options = useMemo(() => getItems(features, lists, circles, intl), [features, lists, circles]);
+  const options = useMemo(() => getItems(features, lists, circles, isReply, intl), [features, lists, circles, isReply]);
   const items: Array<MenuItem> = options.map(item => ({
     ...item,
     action: item.value ? () => onChange(item.value) : undefined,

@@ -55,7 +55,7 @@ const Account: React.FC<IAccount> = ({ accountId, aliases }) => {
 
   if (!added && accountId !== me) {
     button = (
-      <IconButton src={require('@tabler/icons/outline/plus.svg')} iconClassName='h-5 w-5' title={intl.formatMessage(messages.add)} onClick={handleOnAdd} />
+      <IconButton src={require('@phosphor-icons/core/regular/plus.svg')} iconClassName='h-5 w-5' title={intl.formatMessage(messages.add)} onClick={handleOnAdd} />
     );
   }
 
@@ -113,7 +113,7 @@ const Search: React.FC<IAliasesSearch> = ({ onSubmit }) => {
         />
 
         <div role='button' tabIndex={hasValue ? 0 : -1} className='absolute inset-y-0 right-0 flex cursor-pointer items-center px-3 rtl:left-0 rtl:right-auto' onClick={handleClear}>
-          <Icon src={require('@tabler/icons/outline/backspace.svg')} aria-label={intl.formatMessage(messages.search)} className={clsx('size-5 text-gray-600', { 'hidden': !hasValue })} />
+          <Icon src={require('@phosphor-icons/core/regular/backspace.svg')} aria-label={intl.formatMessage(messages.search)} className={clsx('size-5 text-gray-600', { 'hidden': !hasValue })} />
         </div>
       </label>
       <Button onClick={handleSubmit}>{intl.formatMessage(messages.searchTitle)}</Button>
@@ -159,7 +159,7 @@ const AliasesPage = () => {
       <div className='flex-1'>
         <ScrollableList
           scrollKey='aliases'
-          emptyMessage={emptyMessage}
+          emptyMessageText={emptyMessage}
         >
           {aliases.map((alias, i) => (
             <HStack alignItems='center' justifyContent='between' space={1} key={i} className='p-2'>
@@ -169,7 +169,7 @@ const AliasesPage = () => {
                 <Text tag='span'>{alias}</Text>
               </div>
               <div className='flex items-center' role='button' tabIndex={0} onClick={handleAliasDelete} data-value={alias} aria-label={intl.formatMessage(messages.delete)}>
-                <Icon className='mr-1.5' src={require('@tabler/icons/outline/x.svg')} />
+                <Icon className='mr-1.5' src={require('@phosphor-icons/core/regular/x.svg')} />
                 <Text weight='bold' theme='muted'><FormattedMessage id='aliases.aliases_list_delete' defaultMessage='Unlink alias' /></Text>
               </div>
             </HStack>
