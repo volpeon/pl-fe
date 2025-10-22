@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React from 'react';
 
 import HStack from 'pl-fe/components/ui/hstack';
@@ -7,39 +8,32 @@ interface IStatusInfo {
   avatarSize: number;
   icon: React.ReactNode;
   text: React.ReactNode;
+  className?: string;
+  title?: string;
 }
 
 const StatusInfo = (props: IStatusInfo) => {
-  const { avatarSize, icon, text } = props;
+  const { avatarSize, icon, text, className, title } = props;
 
   const onClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     event.stopPropagation();
   };
 
   return (
-    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div
-      // eslint-disable-next-line jsx-a11y/aria-role
-      role='status-info'
+    <HStack
+      space={2}
+      alignItems='center'
+      className={clsx('w-fit max-w-full cursor-default rounded-full border border-gray-200 bg-gray-100 px-3 py-1 black:border-gray-800 black:bg-gray-900 dark:border-transparent dark:bg-primary-800 rtl:space-x-reverse', className)}
       onClick={onClick}
+      style={{ marginLeft: avatarSize - 25, maxWidth: `calc(100% - ${avatarSize - 25}px)` }}
+      title={title}
     >
-      <HStack
-        space={3}
-        alignItems='center'
-        className='cursor-default text-xs font-medium text-gray-700 dark:text-gray-600 rtl:space-x-reverse'
-      >
-        <div
-          className='flex justify-end'
-          style={{ width: avatarSize }}
-        >
-          {icon}
-        </div>
+      {icon}
 
-        <Text size='xs' theme='muted' weight='medium' truncate>
-          {text}
-        </Text>
-      </HStack>
-    </div>
+      <Text size='xs' theme='muted' weight='medium' truncate>
+        {text}
+      </Text>
+    </HStack>
   );
 };
 

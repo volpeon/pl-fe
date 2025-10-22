@@ -1,3 +1,18 @@
+.⁂-status {
+  @apply cursor-pointer;
+
+  &__wrapper {
+    @apply space-y-4;
+  }
+}
+
+.thread__status {
+  .⁂-status__wrapper {
+    padding: 0;
+    box-shadow: none;
+  }
+}
+
 .⁂-media-gallery {
   @apply overflow-hidden rounded-md rounded-lg box-border overflow-hidden isolate relative w-full h-auto;
 

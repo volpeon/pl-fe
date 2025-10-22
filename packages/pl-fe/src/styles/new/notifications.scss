@@ -1,0 +1,39 @@
+@use 'mixins'; 
+
+.⁂-notification {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__info {
+    min-width: 0;
+    flex: 1 1 0%
+  }
+
+  &__icon {
+    flex: none;
+    @apply text-primary-600 dark:text-primary-400;
+
+    &--emoji {
+      height: 1rem;
+      width: 1rem;
+    }
+  }
+
+  &__timestamp {
+    flex: none;
+    margin-left: auto;
+    @include mixins.text($size: xs, $theme: muted, $truncate: true);
+  }
+
+  .⁂-status__wrapper {
+    padding: 0;
+  }
+}

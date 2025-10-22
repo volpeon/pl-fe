@@ -148,7 +148,7 @@ import {
   StatusHoverCard,
   TestTimeline,
   ThemeEditor,
-  UrlPrivacy,
+  Privacy,
   UserIndex,
   WrenchedTimeline,
 } from './util/async-components';
@@ -170,7 +170,7 @@ const SwitchingColumnsArea: React.FC<ISwitchingColumnsArea> = React.memo(({ chil
   const { isLoggedIn } = useLoggedIn();
   const standalone = useAppSelector(isStandalone);
 
-  const { authenticatedProfile, cryptoAddresses } = usePlFeConfig();
+  const { authenticatedProfile, cryptoAddresses, redirectRootNoLogin } = usePlFeConfig();
   const hasCrypto = cryptoAddresses.length > 0;
 
   // NOTE: Mastodon and Pleroma route some basenames to the backend.
@@ -180,6 +180,10 @@ const SwitchingColumnsArea: React.FC<ISwitchingColumnsArea> = React.memo(({ chil
   // Ex: use /login instead of /auth, but redirect /auth to /login
   return (
     <Switch>
+      {(!isLoggedIn && redirectRootNoLogin) && (
+        <Redirect exact from='/' to={redirectRootNoLogin} />
+      )}
+
       {standalone && !isLoggedIn && (WITH_LANDING_PAGE
         ? <WrappedRoute path='/' exact layout={DefaultLayout} component={LandingPage} publicRoute />
         : <Redirect from='/' to='/login/external' exact />)}
@@ -325,7 +329,8 @@ const SwitchingColumnsArea: React.FC<ISwitchingColumnsArea> = React.memo(({ chil
       <WrappedRoute path='/settings/mfa' layout={DefaultLayout} component={MfaForm} exact />
       <WrappedRoute path='/settings/tokens' layout={DefaultLayout} component={AuthTokenList} content={children} />
       {features.interactionRequests && <WrappedRoute path='/settings/interaction_policies' layout={DefaultLayout} component={InteractionPolicies} content={children} />}
-      <WrappedRoute path='/settings/url_privacy' layout={DefaultLayout} component={UrlPrivacy} content={children} />
+      <Redirect from='/settings/url_privacy' to='/settings/privacy' />
+      <WrappedRoute path='/settings/privacy' layout={DefaultLayout} component={Privacy} content={children} />
       <WrappedRoute path='/settings' layout={DefaultLayout} component={Settings} content={children} />
       <WrappedRoute path='/pl-fe/config' adminOnly layout={DefaultLayout} component={PlFeConfig} content={children} />
 

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { defineMessages, FormattedList, FormattedMessage, useIntl } from 'react-intl';
 import { useMutative } from 'use-mutative';
 
-import { changeSetting } from 'pl-fe/actions/settings';
+import { changeSetting, saveSettings } from 'pl-fe/actions/settings';
 import List, { ListItem } from 'pl-fe/components/list';
 import Button from 'pl-fe/components/ui/button';
 import Card, { CardBody, CardHeader, CardTitle } from 'pl-fe/components/ui/card';
@@ -18,6 +18,7 @@ import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { useAppSelector } from 'pl-fe/hooks/use-app-selector';
 import { useSettings } from 'pl-fe/hooks/use-settings';
 import KVStore from 'pl-fe/storage/kv-store';
+import { hasCanvasExtractPermission } from 'pl-fe/utils/favicon-service';
 import { KVStoreRedirectServicesItem } from 'pl-fe/utils/url-purify';
 
 const messages = defineMessages({
@@ -31,12 +32,13 @@ const messages = defineMessages({
   redirectServicePlaceholder: { id: 'url_privacy.redirect_services_url.placeholder', defaultMessage: 'eg. https://proxy.example.org' },
 });
 
-const UrlPrivacy = () => {
+const Privacy = () => {
   const dispatch = useAppDispatch();
   const me = useAppSelector((state) => state.me);
   const intl = useIntl();
 
-  const { urlPrivacy } = useSettings();
+  const settings = useSettings();
+  const { urlPrivacy } = settings;
 
   const [displayTargetHost, setDisplayTargetHost] = useState(urlPrivacy.displayTargetHost);
   const [clearLinksInCompose, setClearLinksInCompose] = useState(urlPrivacy.clearLinksInCompose);
@@ -46,6 +48,7 @@ const UrlPrivacy = () => {
   const [redirectLinksMode, setRedirectLinksMode] = useState(urlPrivacy.redirectLinksMode);
   const [redirectServicesUrl, setRedirectServicesUrl] = useState(urlPrivacy.redirectServicesUrl);
   const [redirectServices, setRedirectServices] = useMutative(urlPrivacy.redirectServices);
+  const [stripMetadata, setStripMetadata] = useState(settings.stripMetadata);
 
   const onSubmit = () => {
     const value = {
@@ -73,8 +76,10 @@ const UrlPrivacy = () => {
         break;
     }
 
-    dispatch(changeSetting(['urlPrivacy'], value, {
-      save: true,
+    dispatch(changeSetting(['urlPrivacy'], value));
+    dispatch(changeSetting(['stripMetadata'], stripMetadata));
+
+    dispatch(saveSettings({
       showAlert: true,
     }));
   };
@@ -198,6 +203,19 @@ const UrlPrivacy = () => {
               ))
             )}
 
+            <List>
+              <ListItem
+                label={<FormattedMessage id='url_privacy.strip_metadata' defaultMessage='Strip metadata from uploaded images' />}
+                hint={
+                  hasCanvasExtractPermission
+                    ? <FormattedMessage id='url_privacy.strip_metadata.hint' defaultMessage='Removes metadata such as EXIF tags, including geolocation, from images before hitting the server. This is usually done server-side, regardless of client settings.' />
+                    : <FormattedMessage id='url_privacy.strip_metadata.hint_no_permission' defaultMessage='This option requires additional permissions to function. Please enable canvas extraction permission in your browser settings.' />
+                }
+              >
+                <Toggle checked={stripMetadata} onChange={({ target }) => setStripMetadata(target.checked)} disabled={!hasCanvasExtractPermission} />
+              </ListItem>
+            </List>
+
             <FormActions>
               <Button type='submit'>
                 <FormattedMessage id='url_privacy.save' defaultMessage='Save' />
@@ -210,4 +228,4 @@ const UrlPrivacy = () => {
   );
 };
 
-export { UrlPrivacy as default };
+export { Privacy as default };

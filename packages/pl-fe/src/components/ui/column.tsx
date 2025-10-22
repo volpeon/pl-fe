@@ -53,8 +53,6 @@ interface IColumn {
   className?: string;
   /** Extra class name for the <CardBody> element. */
   bodyClassName?: string;
-  /** Ref forwarded to column. */
-  ref?: React.Ref<HTMLDivElement>;
   /** Children to display in the column. */
   children?: React.ReactNode;
   /** Action for the ColumnHeader, displayed at the end. */
@@ -64,7 +62,7 @@ interface IColumn {
 }
 
 /** A backdrop for the main section of the UI. */
-const Column = React.forwardRef<HTMLDivElement, IColumn>((props, ref): JSX.Element => {
+const Column: React.FC<IColumn> = (props): JSX.Element => {
   const { backHref, children, label, transparent = false, withHeader = true, className, bodyClassName, action, size } = props;
   const plFeConfig = usePlFeConfig();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -82,7 +80,7 @@ const Column = React.forwardRef<HTMLDivElement, IColumn>((props, ref): JSX.Eleme
   }, []);
 
   return (
-    <div role='region' className='relative' ref={ref} aria-label={label} column-type={transparent ? 'transparent' : 'filled'}>
+    <Card role='region' aria-label={label} column-type={transparent ? 'transparent' : 'filled'} size={size} variant={transparent ? undefined : 'rounded'} className={clsx('relative', className)}>
       <Helmet>
         <title>{label}</title>
 
@@ -95,29 +93,27 @@ const Column = React.forwardRef<HTMLDivElement, IColumn>((props, ref): JSX.Eleme
         )}
       </Helmet>
 
-      <Card size={size} variant={transparent ? undefined : 'rounded'} className={className}>
-        {withHeader && (
-          <ColumnHeader
-            label={label}
-            backHref={backHref}
-            className={clsx({
-              'rounded-t-3xl': !isScrolled && !transparent,
-              'sticky top-0 z-10 bg-white/90 dark:bg-primary-900/90 black:bg-black/80 backdrop-blur': !transparent,
-              'p-4 sm:p-0 sm:pb-4 black:p-4': transparent,
-              '-mt-4 -mx-4 p-4': size !== 'lg' && !transparent,
-              '-mt-4 -mx-4 p-4 sm:-mt-6 sm:-mx-6 sm:p-6': size === 'lg' && !transparent,
-            })}
-            action={action}
-          />
-        )}
+      {withHeader && (
+        <ColumnHeader
+          label={label}
+          backHref={backHref}
+          className={clsx({
+            'rounded-t-3xl': !isScrolled && !transparent,
+            'sticky top-0 z-10 bg-white/90 dark:bg-primary-900/90 black:bg-black/80 backdrop-blur': !transparent,
+            'p-4 sm:p-0 sm:pb-4 black:p-4': transparent,
+            '-mt-4 -mx-4 p-4': size !== 'lg' && !transparent,
+            '-mt-4 -mx-4 p-4 sm:-mt-6 sm:-mx-6 sm:p-6': size === 'lg' && !transparent,
+          })}
+          action={action}
+        />
+      )}
 
-        <CardBody className={bodyClassName}>
-          {children}
-        </CardBody>
-      </Card>
-    </div>
+      <CardBody className={bodyClassName}>
+        {children}
+      </CardBody>
+    </Card>
   );
-});
+};
 
 export {
   Column as default,

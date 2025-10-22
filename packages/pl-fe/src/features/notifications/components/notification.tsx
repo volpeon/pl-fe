@@ -6,9 +6,8 @@ import { mentionCompose, replyCompose } from 'pl-fe/actions/compose';
 import HoverAccountWrapper from 'pl-fe/components/hover-account-wrapper';
 import Icon from 'pl-fe/components/icon';
 import RelativeTimestamp from 'pl-fe/components/relative-timestamp';
+import StatusInfo from 'pl-fe/components/statuses/status-info';
 import Emoji from 'pl-fe/components/ui/emoji';
-import HStack from 'pl-fe/components/ui/hstack';
-import Text from 'pl-fe/components/ui/text';
 import AccountContainer from 'pl-fe/containers/account-container';
 import StatusContainer from 'pl-fe/containers/status-container';
 import Emojify from 'pl-fe/features/emoji/emojify';
@@ -41,6 +40,7 @@ const buildLink = (account: Pick<Account, 'acct' | 'display_name' | 'emojis' | '
     className='font-bold text-gray-800 hover:underline dark:text-gray-200'
     title={account.acct}
     to={`/@${account.acct}`}
+    key={account.id}
   >
     <HoverAccountWrapper key={account.acct} element='bdi' accountId={account.id}>
       <Emojify text={account.display_name} emojis={account.emojis} />
@@ -334,14 +334,14 @@ const Notification: React.FC<INotification> = (props) => {
         <Emoji
           emoji={notification.emoji}
           src={notification.emoji_url || undefined}
-          className='size-4 flex-none'
+          className='⁂-notification__icon ⁂-notification__icon--emoji'
         />
       );
     } else if (icons[displayedType]) {
       return (
         <Icon
           src={icons[displayedType]!}
-          className='flex-none text-primary-600 dark:text-primary-400'
+          className='⁂-notification__icon'
         />
       );
     } else {
@@ -359,6 +359,7 @@ const Notification: React.FC<INotification> = (props) => {
           avatarSize={avatarSize}
           contextType='notifications'
           showGroup={false}
+          variant='slim'
         />
       );
     }
@@ -418,6 +419,7 @@ const Notification: React.FC<INotification> = (props) => {
             avatarSize={avatarSize}
             contextType='notifications'
             showGroup={false}
+            variant='slim'
           />
         ) : null;
       default:
@@ -427,7 +429,7 @@ const Notification: React.FC<INotification> = (props) => {
 
   const targetName = notification.type === 'move' ? notification.target.acct : '';
 
-  const message: React.ReactNode = account && typeof account === 'object'
+  const message: React.ReactNode = accounts.length
     ? buildMessage(intl, displayedType, accounts, targetName, instance.title, !!status)
     : null;
 
@@ -435,61 +437,36 @@ const Notification: React.FC<INotification> = (props) => {
     notificationForScreenReader(
       intl,
       intl.formatMessage(messages[displayedType], {
-        name: account && typeof account === 'object' ? account.acct : '',
+        name: accounts.length ? intl.formatList(accounts.map(account => account.acct), { type: 'conjunction' }) : '',
         targetName,
       }),
       notification.latest_page_notification_at!,
     )
   );
 
+  const statusInfo = <StatusInfo avatarSize={avatarSize} icon={renderIcon()} text={message} title={ariaLabel} />;
+
   return (
     <Hotkeys handlers={handlers} data-testid='notification'>
       <div
-        className='notification'
+        className='⁂-notification'
         tabIndex={0}
         aria-label={ariaLabel}
         ref={node}
       >
-        <div className='p-4'>
-          <div className='mb-2'>
-            <HStack alignItems='center' space={3}>
-              <div
-                className='flex justify-end'
-                style={{ flexBasis: avatarSize }}
-              >
-                {renderIcon()}
-              </div>
+        {!['mention', 'status'].includes(notification.type) ? (
+          <div className='⁂-notification__header'>
+            <div className='⁂-notification__info'>
+              {statusInfo}
+            </div>
 
-              <div className='truncate'>
-                <Text
-                  theme='muted'
-                  size='xs'
-                  truncate
-                  data-testid='message'
-                >
-                  {message}
-                </Text>
-              </div>
-
-              {!['mention', 'status'].includes(notification.type) && (
-                <div className='ml-auto'>
-                  <Text
-                    theme='muted'
-                    size='xs'
-                    truncate
-                    data-testid='message'
-                  >
-                    <RelativeTimestamp timestamp={notification.latest_page_notification_at!} theme='muted' size='sm' className='whitespace-nowrap' />
-                  </Text>
-                </div>
-              )}
-            </HStack>
+            <p className='⁂-notification__timestamp'>
+              <RelativeTimestamp timestamp={notification.latest_page_notification_at!} theme='muted' size='sm' className='whitespace-nowrap' />
+            </p>
           </div>
+        ) : statusInfo}
 
-          <div>
-            {renderContent()}
-          </div>
-        </div>
+        {renderContent()}
       </div>
     </Hotkeys>
   );

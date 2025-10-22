@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { defineMessages, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 
 import { vote } from 'pl-fe/actions/polls';
 import Stack from 'pl-fe/components/ui/stack';
@@ -7,6 +7,7 @@ import Text from 'pl-fe/components/ui/text';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { useAppSelector } from 'pl-fe/hooks/use-app-selector';
 import { useModalsStore } from 'pl-fe/stores/modals';
+import { useStatusMetaStore } from 'pl-fe/stores/status-meta';
 
 import PollFooter from './poll-footer';
 import PollOption from './poll-option';
@@ -17,22 +18,21 @@ type Selected = Record<number, boolean>;
 
 interface IPoll {
   id: string;
-  status?: Pick<Status, 'url'>;
+  status: Pick<Status, 'id' | 'url'>;
   language?: string;
   truncate?: boolean;
 }
 
-const messages = defineMessages({
-  multiple: { id: 'poll.choose_multiple', defaultMessage: 'Choose as many as you\'d like.' },
-});
-
 const Poll: React.FC<IPoll> = ({ id, status, language, truncate }): JSX.Element | null => {
   const { openModal } = useModalsStore();
   const dispatch = useAppDispatch();
-  const intl = useIntl();
 
   const isLoggedIn = useAppSelector((state) => state.me);
   const poll = useAppSelector((state) => state.polls[id]);
+
+  const { statuses: statusesMeta } = useStatusMetaStore();
+
+  const showPollResults = !!statusesMeta[status.id]?.showPollResults;
 
   const [selected, setSelected] = useState({} as Selected);
 
@@ -67,14 +67,14 @@ const Poll: React.FC<IPoll> = ({ id, status, language, truncate }): JSX.Element 
 
   if (!poll) return null;
 
-  const showResults = poll.voted || poll.expired;
+  const showResults = poll.voted || poll.expired || !!showPollResults;
 
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div onClick={e => e.stopPropagation()}>
       {!showResults && poll.multiple && (
         <Text className='mb-4' theme='muted' size='sm'>
-          {intl.formatMessage(messages.multiple)}
+          <FormattedMessage id='poll.choose_multiple' defaultMessage="Choose as many as you'd like." />
         </Text>
       )}
 
@@ -99,6 +99,7 @@ const Poll: React.FC<IPoll> = ({ id, status, language, truncate }): JSX.Element 
           poll={poll}
           showResults={showResults}
           selected={selected}
+          statusId={status.id}
         />
       </Stack>
     </div>

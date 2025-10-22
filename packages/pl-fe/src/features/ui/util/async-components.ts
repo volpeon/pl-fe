@@ -95,14 +95,14 @@ export const Share = lazy(() => import('pl-fe/pages/utils/share'));
 export const Status = lazy(() => import('pl-fe/pages/statuses/status'));
 export const TestTimeline = lazy(() => import('pl-fe/pages/timelines/test-timeline'));
 export const ThemeEditor = lazy(() => import('pl-fe/pages/dashboard/theme-editor'));
-export const UrlPrivacy = lazy(() => import('pl-fe/pages/settings/url-privacy'));
+export const Privacy = lazy(() => import('pl-fe/pages/settings/privacy'));
 export const UserIndex = lazy(() => import('pl-fe/pages/dashboard/user-index'));
 export const WrenchedTimeline = lazy(() => import('pl-fe/pages/timelines/wrenched-timeline'));
 
 // Panels
 export const AccountNotePanel = lazy(() => import('pl-fe/features/ui/components/panels/account-note-panel'));
 export const AnnouncementsPanel = lazy(() => import('pl-fe/components/announcements/announcements-panel'));
-export const BirthdayPanel = lazy(() => import('pl-fe/components/birthday-panel'));
+export const BirthdayPanel = lazy(() => import('pl-fe/features/ui/components/panels/birthday-panel'));
 export const CryptoDonatePanel = lazy(() => import('pl-fe/features/crypto-donate/components/crypto-donate-panel'));
 export const GroupMediaPanel = lazy(() => import('pl-fe/features/ui/components/panels/group-media-panel'));
 export const InstanceInfoPanel = lazy(() => import('pl-fe/features/ui/components/panels/instance-info-panel'));

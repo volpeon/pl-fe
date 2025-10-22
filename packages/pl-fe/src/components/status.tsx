@@ -203,6 +203,7 @@ const Status: React.FC<IStatus> = (props) => {
     if (isReblog && showGroup && group) {
       return (
         <StatusInfo
+          className='-mb-1'
           avatarSize={avatarSize}
           icon={<Icon src={require('@phosphor-icons/core/regular/repeat.svg')} className='size-4 text-green-600' />}
           text={
@@ -264,6 +265,7 @@ const Status: React.FC<IStatus> = (props) => {
 
       return (
         <StatusInfo
+          className='-mb-1'
           avatarSize={avatarSize}
           icon={<Icon src={require('@phosphor-icons/core/regular/repeat.svg')} className='size-4 text-green-600' />}
           text={
@@ -286,6 +288,7 @@ const Status: React.FC<IStatus> = (props) => {
     } else if (featured) {
       return (
         <StatusInfo
+          className='-mb-1'
           avatarSize={avatarSize}
           icon={<Icon src={require('@phosphor-icons/core/regular/push-pin.svg')} className='size-4 text-gray-600 dark:text-gray-400' />}
           text={
@@ -296,6 +299,7 @@ const Status: React.FC<IStatus> = (props) => {
     } else if (showGroup && group) {
       return (
         <StatusInfo
+          className='-mb-1'
           avatarSize={avatarSize}
           icon={<Icon src={require('@phosphor-icons/core/regular/users-three.svg')} className='size-4 text-primary-600 dark:text-accent-blue' />}
           text={
@@ -328,7 +332,7 @@ const Status: React.FC<IStatus> = (props) => {
 
   if (filtered && actualStatus.showFiltered !== true) {
     const body = (
-      <div className={clsx('status__wrapper text-center', { focusable })} ref={node}>
+      <div className={clsx('status__wrapper text-center')} ref={node}>
         <Text theme='muted'>
           <FormattedMessage id='status.filtered' defaultMessage='Filtered' />: {filterResults.map(({ filter }) => filter.title).join(', ')}.
           {' '}
@@ -363,8 +367,12 @@ const Status: React.FC<IStatus> = (props) => {
 
   const body = (
     <div
-      className={clsx('status cursor-pointer', { focusable })}
+      className={clsx('⁂-status', {
+        '⁂-status--reply': !!status.in_reply_to_id,
+      })}
       data-featured={featured ? 'true' : null}
+      data-visibility={actualStatus.visibility}
+      data-id={status.id}
       aria-label={textForScreenReader(intl, actualStatus, rebloggedByText)}
       ref={node}
       onClick={handleClick}
@@ -372,13 +380,11 @@ const Status: React.FC<IStatus> = (props) => {
     >
       <Card
         variant={variant}
-        className={clsx('status__wrapper space-y-4', className, `status-${actualStatus.visibility}`, {
+        className={clsx('⁂-status__wrapper status-wrapper', className, {
           'py-6 sm:p-5': variant === 'rounded',
-          'status-reply': !!status.in_reply_to_id,
           muted,
           read: unread === false,
         })}
-        data-id={status.id}
       >
         {statusInfo}
 

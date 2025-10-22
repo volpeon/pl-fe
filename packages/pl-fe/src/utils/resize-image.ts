@@ -1,7 +1,7 @@
-import { checkCanvasExtractPermission } from './favicon-service';
-
 /* eslint-disable no-case-declarations */
-const DEFAULT_MAX_PIXELS = 1920 * 1080;
+import { hasCanvasExtractPermission } from './favicon-service';
+
+const DEFAULT_MAX_PIXELS = 7680 * 4320;
 
 interface BrowserCanvasQuirks {
   'image-orientation-automatic'?: boolean;
@@ -153,53 +153,55 @@ const processImage = (
   }, type);
 });
 
-const resizeImage = (
+const resizeImage = async (
   img: HTMLImageElement,
   inputFile: File,
   maxPixels: number,
-) => new Promise<File>((resolve, reject) => {
-  const { width, height } = img;
+  force = false,
+) => {
+  let { width, height } = img;
   const type = inputFile.type || 'image/png';
 
-  const newWidth = Math.round(Math.sqrt(maxPixels * (width / height)));
-  const newHeight = Math.round(Math.sqrt(maxPixels * (height / width)));
-
-  if (!checkCanvasExtractPermission()) return reject();
-
-  getOrientation(img, type)
-    .then(orientation => processImage(img, {
-      width: newWidth,
-      height: newHeight,
-      name: inputFile.name,
-      orientation,
-      type,
-    }))
-    .then(resolve)
-    .catch(reject);
-});
-
-/** Resize an image to the maximum number of pixels. */
-const resize = (inputFile: File, maxPixels = DEFAULT_MAX_PIXELS) => new Promise<File>((resolve) => {
-  if (!inputFile.type.match(/image.*/) || inputFile.type === 'image/gif') {
-    resolve(inputFile);
-    return;
+  if (!force && width * height <= maxPixels) {
+    width = Math.round(Math.sqrt(maxPixels * (width / height)));
+    height = Math.round(Math.sqrt(maxPixels * (height / width)));
   }
 
-  loadImage(inputFile).then(img => {
-    if (img.width * img.height < maxPixels) {
-      resolve(inputFile);
-      return;
+  const orientation = await getOrientation(img, type);
+
+  return processImage(img, {
+    width,
+    height,
+    name: inputFile.name,
+    orientation,
+    type,
+  });
+};
+
+/** Resize an image to the maximum number of pixels. */
+const resize = async (inputFile: File, maxPixels = DEFAULT_MAX_PIXELS, force = false): Promise<File> => {
+  if (!hasCanvasExtractPermission) return inputFile;
+
+  if (!inputFile.type.match(/image.*/) || inputFile.type === 'image/gif') {
+    return inputFile;
+  }
+
+  try {
+    const img = await loadImage(inputFile);
+
+    if (!force && img.width * img.height <= maxPixels) {
+      return inputFile;
     }
 
-    resizeImage(img, inputFile, maxPixels)
-      .then(resolve)
-      .catch(error => {
-        console.error(error);
-        resolve(inputFile);
-      });
-  }).catch(() => resolve(inputFile));
-});
-
-export {
-  resize as default,
+    try {
+      return await resizeImage(img, inputFile, maxPixels, force);
+    } catch (error) {
+      console.error(error);
+      return (inputFile);
+    }
+  } catch (error) {
+    return inputFile;
+  }
 };
+
+export { resize as default };

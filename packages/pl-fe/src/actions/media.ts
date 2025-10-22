@@ -1,5 +1,6 @@
 import { defineMessages, type IntlShape } from 'react-intl';
 
+import { useSettingsStore } from 'pl-fe/stores/settings';
 import toast from 'pl-fe/toast';
 import { isLoggedIn } from 'pl-fe/utils/auth';
 import { formatBytes, getVideoDuration } from 'pl-fe/utils/media';
@@ -35,9 +36,13 @@ const uploadFile = (
   changeTotal: (value: number) => void = () => {},
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
   if (!isLoggedIn(getState)) return;
+  const { stripMetadata } = useSettingsStore.getState().settings;
+
   const maxImageSize = getState().instance.configuration.media_attachments.image_size_limit;
   const maxVideoSize = getState().instance.configuration.media_attachments.video_size_limit;
   const maxVideoDuration = getState().instance.configuration.media_attachments.video_duration_limit;
+
+  const imageMatrixLimit = getState().instance.configuration.media_attachments.image_matrix_limit;
 
   const isImage = file.type.match(/image.*/);
   const isVideo = file.type.match(/video.*/);
@@ -63,7 +68,7 @@ const uploadFile = (
   }
 
   // FIXME: Don't define const in loop
-  resizeImage(file).then(resized => {
+  resizeImage(file, imageMatrixLimit, stripMetadata).then(resized => {
     const data = new FormData();
     data.append('file', resized);
     // Account for disparity in size of original image and resized data
