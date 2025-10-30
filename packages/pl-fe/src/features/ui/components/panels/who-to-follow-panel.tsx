@@ -9,7 +9,7 @@ import PlaceholderSidebarSuggestions from 'pl-fe/features/placeholder/components
 import { useFeatures } from 'pl-fe/hooks/use-features';
 import { useDismissSuggestion, useSuggestions } from 'pl-fe/queries/suggestions';
 
-import type { Account as AccountEntity } from 'pl-fe/normalizers/account';
+import type { Account as AccountEntity } from 'pl-api';
 
 const messages = defineMessages({
   dismissSuggestion: { id: 'suggestions.dismiss', defaultMessage: 'Dismiss suggestion' },
@@ -23,7 +23,7 @@ const WhoToFollowPanel = ({ limit }: IWhoToFollowPanel) => {
   const features = useFeatures();
   const intl = useIntl();
 
-  const { data: suggestions, isFetching } = useSuggestions();
+  const { data: suggestions = [], isFetching } = useSuggestions();
   const dismissSuggestion = useDismissSuggestion();
 
   const suggestionsToRender = suggestions.slice(0, limit);

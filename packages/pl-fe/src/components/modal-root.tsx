@@ -7,7 +7,7 @@ import { cancelReplyCompose } from 'pl-fe/actions/compose';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { usePrevious } from 'pl-fe/hooks/use-previous';
 import { usePersistDraftStatus } from 'pl-fe/queries/statuses/use-draft-statuses';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModalsActions } from 'pl-fe/stores/modals';
 
 import type { ModalType } from 'pl-fe/features/ui/components/modal-root';
 import type { Compose } from 'pl-fe/reducers/compose';
@@ -21,8 +21,8 @@ const messages = defineMessages({
 const checkComposeContent = (compose?: Compose) =>
   !!compose && [
     compose.editorState && compose.editorState.length > 0,
-    compose.spoiler_text.length > 0,
-    compose.media_attachments.length > 0,
+    compose.spoilerText.length > 0,
+    compose.mediaAttachments.length > 0,
     compose.poll !== null,
   ].some(check => check === true);
 
@@ -39,7 +39,7 @@ const ModalRoot: React.FC<IModalRoot> = ({ children, onCancel, onClose, type }) 
   const dispatch = useAppDispatch();
 
   const persistDraftStatus = usePersistDraftStatus();
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
 
   const [revealed, setRevealed] = useState(!!children);
 
@@ -64,18 +64,18 @@ const ModalRoot: React.FC<IModalRoot> = ({ children, onCancel, onClose, type }) 
       const hasComposeContent = checkComposeContent(compose);
 
       if (hasComposeContent && type === 'COMPOSE') {
-        const isEditing = compose!.id !== null;
+        const isEditing = compose!.editedId !== null;
         openModal('CONFIRM', {
           heading: isEditing
             ? <FormattedMessage id='confirmations.cancel_editing.heading' defaultMessage='Cancel post editing' />
-            : compose.draft_id
+            : compose.draftId
               ? <FormattedMessage id='confirmations.cancel_draft.heading' defaultMessage='Discard draft changes' />
               : <FormattedMessage id='confirmations.cancel.heading' defaultMessage='Discard post' />,
           message: isEditing
-            ? <FormattedMessage id='confirmations.cancel_editing.message' defaultMessage='Are you sure you want to cancel editing this post? All changes will be lost.' />
-            : compose.draft_id
-              ? <FormattedMessage id='confirmations.cancel_draft_editing.message' defaultMessage='Are you sure you want to cancel editing this draft post? All changes will be lost.' />
-              : <FormattedMessage id='confirmations.cancel.message' defaultMessage='Are you sure you want to cancel creating this post?' />,
+            ? <FormattedMessage id='confirmations.cancel_editing.message' defaultMessage='Are you sure you want to discard the changes to this post? All changes will be lost.' />
+            : compose.draftId
+              ? <FormattedMessage id='confirmations.cancel_draft_editing.message' defaultMessage='Are you sure you want to discard the changes to this draft post? All changes will be lost.' />
+              : <FormattedMessage id='confirmations.cancel.message' defaultMessage='Are you sure you want to discard the currently composed post?' />,
           confirm: intl.formatMessage(messages.confirm),
           onConfirm: () => {
             onClose('COMPOSE');

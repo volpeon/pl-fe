@@ -2,7 +2,7 @@ import { useModalsStore } from 'pl-fe/stores/modals';
 
 import { getClient } from '../api';
 
-import type { Account } from 'pl-fe/normalizers/account';
+import type { Account } from 'pl-api';
 import type { Status } from 'pl-fe/normalizers/status';
 import type { AppDispatch, RootState } from 'pl-fe/store';
 
@@ -18,7 +18,7 @@ type ReportedEntity = {
 const initReport = (entityType: ReportableEntities, account: Pick<Account, 'id'>, entities?: ReportedEntity) => (dispatch: AppDispatch) => {
   const { status } = entities || {};
 
-  return useModalsStore.getState().openModal('REPORT', {
+  return useModalsStore.getState().actions.openModal('REPORT', {
     accountId: account.id,
     entityType,
     statusIds: status ? [status.id] : [],

@@ -9,6 +9,7 @@
 import {
   credentialAccountSchema,
   PlApiClient,
+  type Account,
   type CreateAccountParams,
   type CredentialAccount,
   type CredentialApplication,
@@ -37,7 +38,6 @@ import { type PlfeResponse, getClient } from '../api';
 
 import { importEntities } from './importer';
 
-import type { Account } from 'pl-fe/normalizers/account';
 import type { AppDispatch, RootState } from 'pl-fe/store';
 
 const SWITCH_ACCOUNT = 'SWITCH_ACCOUNT' as const;

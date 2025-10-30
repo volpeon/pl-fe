@@ -4,7 +4,7 @@ import { patchMe } from 'pl-fe/actions/me';
 import { getClient } from 'pl-fe/api';
 import { NODE_ENV } from 'pl-fe/build-config';
 import messages from 'pl-fe/messages';
-import { makeGetAccount } from 'pl-fe/selectors';
+import { selectOwnAccount } from 'pl-fe/selectors';
 import KVStore from 'pl-fe/storage/kv-store';
 import { useSettingsStore } from 'pl-fe/stores/settings';
 import toast from 'pl-fe/toast';
@@ -24,7 +24,7 @@ type SettingOpts = {
 const saveSuccessMessage = defineMessage({ id: 'settings.save.success', defaultMessage: 'Your preferences have been saved!' });
 
 const changeSetting = (path: string[], value: any, opts?: SettingOpts) => {
-  useSettingsStore.getState().changeSetting(path, value);
+  useSettingsStore.getState().actions.changeSetting(path, value);
 
   if (opts?.save !== false) return saveSettings(opts);
   return () => {};
@@ -34,7 +34,7 @@ const saveSettings = (opts?: SettingOpts) =>
   (dispatch: AppDispatch, getState: () => RootState) => {
     if (!isLoggedIn(getState)) return;
 
-    const { userSettings, userSettingsSaving } = useSettingsStore.getState();
+    const { userSettings, actions: { userSettingsSaving } } = useSettingsStore.getState();
     if (userSettings.saved) return;
 
     const { saved, ...data } = userSettings;
@@ -76,7 +76,7 @@ const updateSettingsStore = (settings: any) =>
         },
       }));
     } else {
-      const accountUrl = makeGetAccount()(state, state.me as string)!.url;
+      const accountUrl = selectOwnAccount(state)!.url;
 
       return updateAuthAccount(accountUrl, settings);
     }

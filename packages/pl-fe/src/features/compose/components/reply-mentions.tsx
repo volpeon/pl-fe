@@ -3,23 +3,23 @@ import { FormattedList, FormattedMessage } from 'react-intl';
 
 import { useCompose } from 'pl-fe/hooks/use-compose';
 import { useFeatures } from 'pl-fe/hooks/use-features';
-import { useModalsStore } from 'pl-fe/stores/modals';
-import { useSettingsStore } from 'pl-fe/stores/settings';
+import { useModalsActions } from 'pl-fe/stores/modals';
+import { useSettings } from 'pl-fe/stores/settings';
 
 interface IReplyMentions {
   composeId: string;
 }
 
 const ReplyMentions: React.FC<IReplyMentions> = ({ composeId }) => {
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
   const features = useFeatures();
   const compose = useCompose(composeId);
   const to = compose.to;
 
-  const { forceImplicitAddressing } = useSettingsStore().settings;
+  const { forceImplicitAddressing } = useSettings();
   const explicitAddressing = features.createStatusExplicitAddressing && !forceImplicitAddressing;
 
-  if (!explicitAddressing || !compose.in_reply_to || !to) {
+  if (!explicitAddressing || !compose.inReplyToId || !to) {
     return null;
   }
 
@@ -31,7 +31,7 @@ const ReplyMentions: React.FC<IReplyMentions> = ({ composeId }) => {
     });
   };
 
-  if (!compose.parent_reblogged_by && to.length === 0) {
+  if (!compose.parentRebloggedById && to.length === 0) {
     return null;
   }
 

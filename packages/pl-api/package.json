@@ -1,6 +1,6 @@
 {
   "name": "pl-api",
-  "version": "1.0.0-rc.91",
+  "version": "1.0.0-rc.92",
   "type": "module",
   "homepage": "https://codeberg.org/mkljczk/pl-fe/src/branch/develop/packages/pl-api",
   "repository": {
@@ -35,7 +35,7 @@
     "typedoc-material-theme": "^1.4.0",
     "typedoc-plugin-valibot": "^1.0.0",
     "typescript": "^5.8.3",
-    "vite": "^5.4.20",
+    "vite": "^5.4.21",
     "vite-plugin-dts": "^4.5.4",
     "ws": "^8.18.3"
   },

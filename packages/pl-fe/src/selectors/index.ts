@@ -7,10 +7,8 @@ import { validId } from 'pl-fe/utils/auth';
 import ConfigDB from 'pl-fe/utils/config-db';
 import { shouldFilter } from 'pl-fe/utils/timelines';
 
-import type { Filter, FilterResult, NotificationGroup, Relationship } from 'pl-api';
+import type { Account, Filter, FilterResult, Group, NotificationGroup } from 'pl-api';
 import type { EntityStore } from 'pl-fe/entity-store/types';
-import type { Account } from 'pl-fe/normalizers/account';
-import type { Group } from 'pl-fe/normalizers/group';
 import type { minifyAdminReport } from 'pl-fe/queries/utils/minify-list';
 import type { MinifiedStatus } from 'pl-fe/reducers/statuses';
 import type { MRFSimple } from 'pl-fe/schemas/pleroma';
@@ -29,25 +27,6 @@ const selectOwnAccount = (state: RootState) => {
     return selectAccount(state, state.me);
   }
 };
-
-const getAccountBase = (state: RootState, accountId: string) => state.entities[Entities.ACCOUNTS]?.store[accountId] as Account | undefined;
-const getAccountRelationship = (state: RootState, accountId: string) => state.entities[Entities.RELATIONSHIPS]?.store[accountId] as Relationship | undefined;
-const getAccountMeta = (state: RootState, accountId: string) => state.accounts_meta[accountId];
-
-const makeGetAccount = () => createSelector([
-  getAccountBase,
-  getAccountRelationship,
-  getAccountMeta,
-], (account, relationship, meta) => {
-  if (!account) return null;
-  return {
-    ...account,
-    relationship,
-    __meta: { meta, ...account.__meta },
-    // @ts-ignore
-    is_admin: meta?.role ? (meta.role.permissions & 0x1) === 0x1 : account.is_admin,
-  };
-});
 
 const toServerSideType = (columnType: string): Filter['context'][0] => {
   switch (columnType) {
@@ -131,14 +110,13 @@ const makeGetStatus = () => createSelector(
       if (group) return state.entities[Entities.GROUPS]?.store[group] as Group;
       return undefined;
     },
-    (state: RootState, { id }: APIStatus) => state.polls[id] || null,
     (_state: RootState, { username }: APIStatus) => username,
     getFilters,
     (state: RootState) => state.me,
     (state: RootState) => state.auth.client.features,
   ],
 
-  (statusBase, statusReblog, statusQuote, statusGroup, poll, username, filters, me, features) => {
+  (statusBase, statusReblog, statusQuote, statusGroup, username, filters, me, features) => {
     // const locale = getLocale('en');
 
     if (!statusBase) return null;
@@ -159,7 +137,6 @@ const makeGetStatus = () => createSelector(
       reblog: statusReblog || null,
       quote: statusQuote || null,
       group: statusGroup || null,
-      poll,
       filtered,
     };
   },
@@ -311,7 +288,6 @@ export {
   selectAccount,
   selectAccounts,
   selectOwnAccount,
-  makeGetAccount,
   getFilters,
   regexFromFilters,
   makeGetStatus,

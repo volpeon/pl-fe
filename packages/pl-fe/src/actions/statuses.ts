@@ -11,7 +11,7 @@ import { setComposeToStatus } from './compose';
 import { importEntities } from './importer';
 import { deleteFromTimelines } from './timelines';
 
-import type { CreateStatusParams, Status as BaseStatus, ScheduledStatus, StatusSource } from 'pl-api';
+import type { CreateStatusParams, Status as BaseStatus, ScheduledStatus, StatusSource, Poll } from 'pl-api';
 import type { Status } from 'pl-fe/normalizers/status';
 import type { AppDispatch, RootState } from 'pl-fe/store';
 import type { IntlShape } from 'react-intl';
@@ -36,18 +36,18 @@ const STATUS_UNMUTE_SUCCESS = 'STATUS_UNMUTE_SUCCESS' as const;
 
 const STATUS_UNFILTER = 'STATUS_UNFILTER' as const;
 
-const createStatus = (params: CreateStatusParams, idempotencyKey: string, statusId: string | null, redacting = false) =>
+const createStatus = (params: CreateStatusParams, idempotencyKey: string, editedId: string | null, redacting = false) =>
   (dispatch: AppDispatch, getState: () => RootState) => {
-    if (!params.preview) dispatch<StatusesAction>({ type: STATUS_CREATE_REQUEST, params, idempotencyKey, editing: !!statusId, redacting });
+    if (!params.preview) dispatch<StatusesAction>({ type: STATUS_CREATE_REQUEST, params, idempotencyKey, editing: !!editedId, redacting });
 
     const client = getClient(getState());
 
     return (
-      statusId === null
+      editedId === null
         ? client.statuses.createStatus(params)
         : redacting
-          ? client.admin.statuses.redactStatus(statusId, params)
-          : client.statuses.editStatus(statusId, params)
+          ? client.admin.statuses.redactStatus(editedId, params)
+          : client.statuses.editStatus(editedId, params)
     )
       .then((status) => {
         if (params.preview) return status;
@@ -61,7 +61,7 @@ const createStatus = (params: CreateStatusParams, idempotencyKey: string, status
           queryClient.invalidateQueries(scheduledStatusesQueryOptions);
         }
 
-        dispatch<StatusesAction>({ type: STATUS_CREATE_SUCCESS, status, params, idempotencyKey, editing: !!statusId });
+        dispatch<StatusesAction>({ type: STATUS_CREATE_SUCCESS, status, params, idempotencyKey, editing: !!editedId });
 
         // Poll the backend for the updated card
         if (expectsCard) {
@@ -82,7 +82,7 @@ const createStatus = (params: CreateStatusParams, idempotencyKey: string, status
 
         return status;
       }).catch(error => {
-        dispatch<StatusesAction>({ type: STATUS_CREATE_FAIL, error, params, idempotencyKey, editing: !!statusId });
+        dispatch<StatusesAction>({ type: STATUS_CREATE_FAIL, error, params, idempotencyKey, editing: !!editedId });
         throw error;
       });
   };
@@ -91,14 +91,14 @@ const editStatus = (statusId: string) => (dispatch: AppDispatch, getState: () =>
   const state = getState();
 
   const status = state.statuses[statusId]!;
-  const poll = status.poll_id ? state.polls[status.poll_id] : undefined;
+  const poll = status.poll_id ? queryClient.getQueryData<Poll>(['statuses', 'polls', status.poll_id]) : undefined;
 
   dispatch<StatusesAction>({ type: STATUS_FETCH_SOURCE_REQUEST });
 
   return getClient(state).statuses.getStatusSource(statusId).then(response => {
     dispatch<StatusesAction>({ type: STATUS_FETCH_SOURCE_SUCCESS });
     dispatch(setComposeToStatus(status, poll, response.text, response.spoiler_text, response.content_type, false));
-    useModalsStore.getState().openModal('COMPOSE');
+    useModalsStore.getState().actions.openModal('COMPOSE');
   }).catch(error => {
     dispatch<StatusesAction>({ type: STATUS_FETCH_SOURCE_FAIL, error });
   });
@@ -123,7 +123,7 @@ const deleteStatus = (statusId: string, groupId?: string, withRedraft = false) =
     const state = getState();
 
     const status = state.statuses[statusId]!;
-    const poll = status.poll_id ? state.polls[status.poll_id] : undefined;
+    const poll = status.poll_id ? queryClient.getQueryData<Poll>(['statuses', 'polls', status.poll_id]) : undefined;
 
     dispatch<StatusesAction>({ type: STATUS_DELETE_REQUEST, params: status });
 
@@ -137,7 +137,7 @@ const deleteStatus = (statusId: string, groupId?: string, withRedraft = false) =
 
       if (withRedraft) {
         dispatch(setComposeToStatus(status, poll, response.text || '', response.spoiler_text, (response as StatusSource).content_type, withRedraft));
-        useModalsStore.getState().openModal('COMPOSE');
+        useModalsStore.getState().actions.openModal('COMPOSE');
       }
     })
       .catch(error => {

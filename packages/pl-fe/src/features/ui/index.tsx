@@ -22,7 +22,6 @@ import { useInstance } from 'pl-fe/hooks/use-instance';
 import { useLoggedIn } from 'pl-fe/hooks/use-logged-in';
 import { useOwnAccount } from 'pl-fe/hooks/use-own-account';
 import { usePlFeConfig } from 'pl-fe/hooks/use-pl-fe-config';
-import { useSettings } from 'pl-fe/hooks/use-settings';
 import AdminLayout from 'pl-fe/layouts/admin-layout';
 import ChatsLayout from 'pl-fe/layouts/chats-layout';
 import DefaultLayout from 'pl-fe/layouts/default-layout';
@@ -43,8 +42,9 @@ import { prefetchFollowRequests } from 'pl-fe/queries/accounts/use-follow-reques
 import { queryClient } from 'pl-fe/queries/client';
 import { prefetchCustomEmojis } from 'pl-fe/queries/instance/use-custom-emojis';
 import { scheduledStatusesQueryOptions } from 'pl-fe/queries/statuses/scheduled-statuses';
+import { useSettings } from 'pl-fe/stores/settings';
 import { useShoutboxSubscription } from 'pl-fe/stores/shoutbox';
-import { useUiStore } from 'pl-fe/stores/ui';
+import { useIsDropdownMenuOpen } from 'pl-fe/stores/ui';
 import { getVapidKey } from 'pl-fe/utils/auth';
 import { isStandalone } from 'pl-fe/utils/state';
 
@@ -396,7 +396,7 @@ const UI: React.FC<IUI> = React.memo(({ children }) => {
   const instance = useInstance();
   const { theme } = useSettings();
 
-  const { isDropdownMenuOpen } = useUiStore();
+  const isDropdownMenuOpen = useIsDropdownMenuOpen();
   const standalone = useAppSelector(isStandalone);
 
   useShoutboxSubscription();

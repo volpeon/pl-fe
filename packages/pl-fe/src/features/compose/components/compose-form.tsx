@@ -19,9 +19,7 @@ import {
 } from 'pl-fe/actions/compose';
 import DropdownMenu from 'pl-fe/components/dropdown-menu';
 import List, { ListItem } from 'pl-fe/components/list';
-import HStack from 'pl-fe/components/ui/hstack';
 import Icon from 'pl-fe/components/ui/icon';
-import Stack from 'pl-fe/components/ui/stack';
 import SvgIcon from 'pl-fe/components/ui/svg-icon';
 import Toggle from 'pl-fe/components/ui/toggle';
 import EmojiPickerDropdown from 'pl-fe/features/emoji/containers/emoji-picker-dropdown-container';
@@ -32,7 +30,7 @@ import { useDraggedFiles } from 'pl-fe/hooks/use-dragged-files';
 import { useFeatures } from 'pl-fe/hooks/use-features';
 import { useInstance } from 'pl-fe/hooks/use-instance';
 import { usePersistDraftStatus } from 'pl-fe/queries/statuses/use-draft-statuses';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModalsActions } from 'pl-fe/stores/modals';
 import toast from 'pl-fe/toast';
 
 import PreviewComposeContainer from '../containers/preview-compose-container';
@@ -122,14 +120,15 @@ interface IComposeForm<ID extends string> {
   group?: string;
   withAvatar?: boolean;
   transparent?: boolean;
+  compact?: boolean;
 }
 
-const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickableAreaRef, event, group, withAvatar, transparent }: IComposeForm<ID>) => {
+const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickableAreaRef, event, group, withAvatar, transparent, compact }: IComposeForm<ID>) => {
   const history = useHistory();
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const { configuration } = useInstance();
-  const { closeModal } = useModalsStore();
+  const { closeModal } = useModalsActions();
 
   const compose = useCompose(id);
   const maxTootChars = configuration.statuses.max_characters;
@@ -137,21 +136,20 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
   const persistDraftStatus = usePersistDraftStatus();
 
   const {
-    spoiler_text: spoilerText,
-    privacy,
-    is_submitting: isSubmitting,
-    is_changing_upload:
+    spoilerText,
+    visibility,
+    isSubmitting,
     isChangingUpload,
-    is_uploading: isUploading,
-    schedule: scheduledAt,
-    group_id: groupId,
+    isUploading,
+    scheduledAt,
+    groupId,
     text,
-    modified_language: modifiedLanguage,
+    modifiedLanguage,
   } = compose;
 
   const hasPoll = !!compose.poll;
-  const isEditing = compose.id !== null;
-  const anyMedia = compose.media_attachments.length > 0;
+  const isEditing = compose.editedId !== null;
+  const anyMedia = compose.mediaAttachments.length > 0;
 
   const [composeFocused, setComposeFocused] = useState(false);
 
@@ -248,7 +246,7 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
 
   const onAcceptClearLinkSuggestion = (key: string) => {
     const editor = editorRef.current;
-    const suggestion = compose.clear_link_suggestion;
+    const suggestion = compose.clearLinkSuggestion;
     if (!editor || !suggestion) return;
 
     editor.update(() => {
@@ -292,14 +290,14 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
     </div>
   ), [features, id, anyMedia]);
 
-  const showModifiers = !condensed && (compose.media_attachments.length || compose.is_uploading || compose.poll?.options.length || compose.schedule);
+  const showModifiers = !condensed && (compose.mediaAttachments.length || compose.isUploading || compose.poll?.options.length || compose.scheduledAt);
 
   const composeModifiers = showModifiers && (
-    <Stack space={4} className='font-[inherit] text-sm text-gray-900'>
+    <div className='⁂-compose-form__modifiers'>
       <UploadForm composeId={id} onSubmit={handleSubmit} />
       <PollForm composeId={id} />
       <ScheduleForm composeId={id} />
-    </Stack>
+    </div>
   );
 
   let publishText: string | JSX.Element = '';
@@ -307,14 +305,14 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
 
   if (isEditing) {
     publishText = intl.formatMessage(messages.saveChanges);
-  } else if (privacy === 'direct') {
+  } else if (visibility === 'direct') {
     publishIcon = require('@phosphor-icons/core/regular/at.svg');
     publishText = intl.formatMessage(messages.message);
-  } else if (privacy === 'private' || privacy === 'mutuals_only') {
+  } else if (visibility === 'private' || visibility === 'mutuals_only') {
     publishIcon = require('@phosphor-icons/core/regular/lock.svg');
     publishText = intl.formatMessage(messages.publish);
   } else {
-    publishText = privacy !== 'unlisted' ? intl.formatMessage(messages.publishLoud, { publish: intl.formatMessage(messages.publish) }) : intl.formatMessage(messages.publish);
+    publishText = visibility !== 'unlisted' ? intl.formatMessage(messages.publishLoud, { publish: intl.formatMessage(messages.publish) }) : intl.formatMessage(messages.publish);
   }
 
   if (scheduledAt) {
@@ -323,9 +321,9 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
 
   const selectButtons = [];
 
-  if (features.privacyScopes && !group && !groupId) selectButtons.push(<PrivacyDropdown key='privacy-dropdown' composeId={id} />);
-  if (features.richText) selectButtons.push(<ContentTypeButton key='compose-type-button' composeId={id} />);
-  if (features.postLanguages) selectButtons.push(<LanguageDropdown key='language-dropdown' composeId={id} />);
+  if (features.privacyScopes && !group && !groupId) selectButtons.push(<PrivacyDropdown key='privacy-dropdown' composeId={id} compact={compact} />);
+  if (features.richText) selectButtons.push(<ContentTypeButton key='compose-type-button' composeId={id} compact={compact} />);
+  if (features.postLanguages) selectButtons.push(<LanguageDropdown key='language-dropdown' composeId={id} compact={compact} />);
 
   const actionsMenu: Menu = [];
 
@@ -346,13 +344,14 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
   return (
     <form
       className={clsx('⁂-compose-form', {
+        '⁂-compose-form--transparent': transparent,
         '⁂-compose-form--with-avatar': withAvatar,
       })}
       ref={formRef}
       onClick={handleClick}
       onSubmit={handleSubmit}
     >
-      {!!compose.in_reply_to && compose.approvalRequired && (
+      {!!compose.inReplyToId && compose.approvalRequired && (
         <Warning
           message={(
             <FormattedMessage id='compose_form.approval_required' defaultMessage='The reply needs to be approved by the post author.' />
@@ -369,9 +368,9 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
       {!shouldCondense && !event && !group && <ReplyMentions composeId={id} />}
 
       {selectButtons.length > 0 && (
-        <HStack space={2} wrap className={clsx(transparent && '-mb-2')}>
+        <div className='⁂-compose-form__select-buttons'>
           {selectButtons}
-        </HStack>
+        </div>
       )}
 
       {features.spoilers && (
@@ -389,9 +388,7 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
           <ComposeEditor
             key={modifiedLanguage}
             ref={editorRef}
-            className={clsx('⁂-compose-form__editor', {
-              '⁂-compose-form__editor--transparent': transparent,
-            })}
+            className='⁂-compose-form__editor'
             placeholderClassName='⁂-compose-form__editor__placeholder'
             composeId={id}
             condensed={condensed}
@@ -425,7 +422,7 @@ const ComposeForm = <ID extends string>({ id, shouldCondense, autoFocus, clickab
         <div className='⁂-compose-form__actions'>
           {maxTootChars && (
             <div className='⁂-compose-form__counter'>
-              <TextCharacterCounter max={maxTootChars} text={text} />
+              {!compact && <TextCharacterCounter max={maxTootChars} text={text} />}
               <VisualCharacterCounter max={maxTootChars} text={text} />
             </div>
           )}

@@ -1,30 +1,13 @@
 import pick from 'lodash.pick';
 import * as v from 'valibot';
 
+import { isDefaultAvatar, isDefaultHeader } from '../utils/accounts';
+import { guessFqn } from '../utils/domain';
+
 import { customEmojiSchema } from './custom-emoji';
 import { relationshipSchema } from './relationship';
 import { roleSchema } from './role';
 import { coerceObject, datetimeSchema, filteredArray } from './utils';
-
-const getDomainFromURL = (account: Pick<Account, 'url'>): string => {
-  try {
-    const url = account.url;
-    return new URL(url).host;
-  } catch {
-    return '';
-  }
-};
-
-const guessFqn = (account: Pick<Account, 'acct' | 'url'>): string => {
-  const acct = account.acct;
-  const [user, domain] = acct.split('@');
-
-  if (domain) {
-    return acct;
-  } else {
-    return [user, getDomainFromURL(account)].join('@');
-  }
-};
 
 const filterBadges = (tags?: string[]) =>
   tags?.filter(tag => tag.startsWith('badge:')).map(tag => v.parse(roleSchema, { id: tag, name: tag.replace(/^badge:/, '') }));
@@ -46,8 +29,10 @@ const preprocessAccount = v.transform((account: any) => {
     username,
     fqn,
     domain,
-    avatar_static: account.avatar_static || account.avatar,
-    header_static: account.header_static || account.header,
+    avatar: account.avatar || account.avatar_static,
+    header: account.header || account.header_static,
+    avatar_default: isDefaultAvatar(account.avatar || account.avatar_static),
+    header_default: isDefaultHeader(account.header || account.header_static),
     local: typeof account.pleroma?.is_local === 'boolean' ? account.pleroma.is_local : account.acct.split('@')[1] === undefined,
     discoverable: account.discoverable || account.pleroma?.source?.discoverable,
     verified: account.verified || account.pleroma?.tags?.includes('verified'),
@@ -205,6 +190,9 @@ const baseAccountSchema = v.object({
     pleroma: v.optional(v.any(), undefined),
     source: v.optional(v.any(), undefined),
   }),
+
+  avatar_default: v.fallback(v.boolean(), false),
+  header_default: v.fallback(v.boolean(), false),
 });
 
 const accountWithMovedAccountSchema = v.object({

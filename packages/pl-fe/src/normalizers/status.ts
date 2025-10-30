@@ -8,9 +8,6 @@ import * as v from 'valibot';
 
 import { unescapeHTML } from 'pl-fe/utils/html';
 
-import { normalizeAccount } from './account';
-import { normalizeGroup } from './group';
-
 const domParser = new DOMParser();
 
 type StatusApprovalStatus = Exclude<BaseStatus['approval_status'], null>;
@@ -106,7 +103,7 @@ const normalizeStatus = (status: BaseStatus & {
   }
 
   // Normalize group
-  const group = status.group ? normalizeGroup(status.group) : null;
+  const group = status.group || null;
 
   return {
     account_id: status.account.id,
@@ -118,8 +115,6 @@ const normalizeStatus = (status: BaseStatus & {
     deleted: false,
     ...status,
     quote_id: status.quote_id || null,
-    account: normalizeAccount(status.account),
-    accounts: status.accounts?.map(normalizeAccount),
     mentions,
     event,
     group,

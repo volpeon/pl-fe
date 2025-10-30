@@ -1,7 +1,7 @@
 import React from 'react';
 
 import StillImage from 'pl-fe/components/still-image';
-import { useSettings } from 'pl-fe/hooks/use-settings';
+import { useSettings } from 'pl-fe/stores/settings';
 import { removeVS16s, toCodePoints } from 'pl-fe/utils/emoji';
 import { joinPublicPath } from 'pl-fe/utils/static';
 
@@ -9,12 +9,13 @@ interface IEmoji extends Pick<React.ImgHTMLAttributes<HTMLImageElement>, 'alt' |
   /** Unicode emoji character. */
   emoji?: string;
   noGroup?: boolean;
+  staticSrc?: string;
 }
 
 /** A single emoji image. */
 const Emoji: React.FC<IEmoji> = (props): JSX.Element | null => {
   const { disableUserProvidedMedia, systemEmojiFont } = useSettings();
-  const { emoji, alt, src, noGroup, ...rest } = props;
+  const { emoji, alt, src, staticSrc, noGroup, ...rest } = props;
 
   let filename;
 
@@ -35,6 +36,7 @@ const Emoji: React.FC<IEmoji> = (props): JSX.Element | null => {
       <StillImage
         alt={alt || emoji}
         src={src}
+        staticSrc={staticSrc}
         isGif
         noGroup={noGroup}
         letterboxed

@@ -12,7 +12,7 @@ import { type Language, languages as languagesObject } from 'pl-fe/features/pref
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { useCompose } from 'pl-fe/hooks/use-compose';
 import { useFeatures } from 'pl-fe/hooks/use-features';
-import { useSettings } from 'pl-fe/hooks/use-settings';
+import { useSettings } from 'pl-fe/stores/settings';
 
 const getFrequentlyUsedLanguages = (languageCounters: Record<string, number>) => (
   Object.keys(languageCounters)
@@ -49,7 +49,7 @@ const getLanguageDropdown = (composeId: string): React.FC<ILanguageDropdown> => 
 
   const {
     language,
-    modified_language: modifiedLanguage,
+    modifiedLanguage,
     textMap,
   } = useCompose(composeId);
 
@@ -218,21 +218,22 @@ const getLanguageDropdown = (composeId: string): React.FC<ILanguageDropdown> => 
 
 interface ILanguageDropdownButton {
   composeId: string;
+  compact?: boolean;
 }
 
-const LanguageDropdownButton: React.FC<ILanguageDropdownButton> = ({ composeId }) => {
+const LanguageDropdownButton: React.FC<ILanguageDropdownButton> = ({ composeId, compact }) => {
   const intl = useIntl();
 
   const {
     language,
-    modified_language: modifiedLanguage,
-    suggested_language: suggestedLanguage,
+    modifiedLanguage,
+    suggestedLanguage,
     textMap,
   } = useCompose(composeId);
 
   const languagesCount = Object.keys(textMap).length;
 
-  let buttonLabel = intl.formatMessage(messages.languagePrompt);
+  let buttonLabel = compact ? undefined : intl.formatMessage(messages.languagePrompt);
   if (language) {
     const list: string[] = [languagesObject[(modifiedLanguage || language) as Language]];
     if (languagesCount) list.push(intl.formatMessage(messages.multipleLanguages, {

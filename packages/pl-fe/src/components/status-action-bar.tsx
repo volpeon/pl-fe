@@ -1,9 +1,8 @@
-import { type CustomEmoji, GroupRoles } from 'pl-api';
+import { type Account, type CustomEmoji, type Group, GroupRoles } from 'pl-api';
 import React, { useCallback, useMemo } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { useHistory, useRouteMatch } from 'react-router-dom';
 
-import { blockAccount } from 'pl-fe/actions/accounts';
 import { redactStatus } from 'pl-fe/actions/admin';
 import { directCompose, mentionCompose, quoteCompose, replyCompose } from 'pl-fe/actions/compose';
 import { emojiReact, unEmojiReact } from 'pl-fe/actions/emoji-reacts';
@@ -15,7 +14,6 @@ import { useGroup } from 'pl-fe/api/hooks/groups/use-group';
 import { useGroupRelationship } from 'pl-fe/api/hooks/groups/use-group-relationship';
 import DropdownMenu from 'pl-fe/components/dropdown-menu';
 import StatusActionButton from 'pl-fe/components/status-action-button';
-import HStack from 'pl-fe/components/ui/hstack';
 import EmojiPickerDropdown from 'pl-fe/features/emoji/containers/emoji-picker-dropdown-container';
 import { languages } from 'pl-fe/features/preferences';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
@@ -25,27 +23,24 @@ import { useClient } from 'pl-fe/hooks/use-client';
 import { useFeatures } from 'pl-fe/hooks/use-features';
 import { useInstance } from 'pl-fe/hooks/use-instance';
 import { useOwnAccount } from 'pl-fe/hooks/use-own-account';
-import { useSettings } from 'pl-fe/hooks/use-settings';
+import { useBlockAccountMutation, useUnblockAccountMutation } from 'pl-fe/queries/accounts/use-relationship';
 import { useChats } from 'pl-fe/queries/chats';
 import { useBlockGroupUserMutation } from 'pl-fe/queries/groups/use-group-blocks';
 import { useCustomEmojis } from 'pl-fe/queries/instance/use-custom-emojis';
 import { useTranslationLanguages } from 'pl-fe/queries/instance/use-translation-languages';
 import { useBookmarkStatus, useDislikeStatus, useFavouriteStatus, usePinStatus, useReblogStatus, useUnbookmarkStatus, useUndislikeStatus, useUnfavouriteStatus, useUnpinStatus, useUnreblogStatus } from 'pl-fe/queries/statuses/use-status-interactions';
-import { useModalsStore } from 'pl-fe/stores/modals';
-import { useStatusMetaStore } from 'pl-fe/stores/status-meta';
+import { useModalsActions } from 'pl-fe/stores/modals';
+import { useSettings } from 'pl-fe/stores/settings';
+import { useStatusMeta, useStatusMetaActions } from 'pl-fe/stores/status-meta';
 import toast from 'pl-fe/toast';
 import copy from 'pl-fe/utils/copy';
 
 import GroupPopover from './groups/popover/group-popover';
 import Popover from './ui/popover';
-import Stack from './ui/stack';
-import Text from './ui/text';
 
 import type { Menu } from 'pl-fe/components/dropdown-menu';
 import type { Emoji as EmojiType } from 'pl-fe/features/emoji';
 import type { UnauthorizedModalAction } from 'pl-fe/modals/unauthorized-modal';
-import type { Account } from 'pl-fe/normalizers/account';
-import type { Group } from 'pl-fe/normalizers/group';
 import type { SelectedStatus } from 'pl-fe/selectors';
 import type { Me } from 'pl-fe/types/pl-fe';
 
@@ -53,6 +48,7 @@ const messages = defineMessages({
   adminAccount: { id: 'status.admin_account', defaultMessage: 'Moderate @{name}' },
   admin_status: { id: 'status.admin_status', defaultMessage: 'Open this post in the moderation interface' },
   block: { id: 'account.block', defaultMessage: 'Block @{name}' },
+  unblock: { id: 'account.unblock', defaultMessage: 'Unblock @{name}' },
   blocked: { id: 'group.group_mod_block.success', defaultMessage: '@{name} is banned' },
   blockAndReport: { id: 'confirmations.block.block_and_report', defaultMessage: 'Block and report' },
   blockConfirm: { id: 'confirmations.block.confirm', defaultMessage: 'Block' },
@@ -183,18 +179,18 @@ const InteractionPopover: React.FC<IInteractionPopover> = ({ type, allowed }) =>
   const allowedType = allowed?.includes('followers') ? 'followers' : allowed?.includes('following') ? 'following' : allowed?.includes('mutuals') ? 'mutuals' : 'mentioned';
 
   return (
-    <Stack space={1} className='max-w-96'>
-      <Text weight='semibold' align='center'>
+    <div className='⁂-interaction-popover'>
+      <p className='⁂-interaction-popover__header'>
         {intl.formatMessage(INTERACTION_POLICY_HEADERS[type])}
-      </Text>
-      <Text theme='muted' align='center'>
+      </p>
+      <p className='⁂-interaction-popover__description'>
         {intl.formatMessage(INTERACTION_POLICY_DESCRIPTIONS[type][allowedType])}
-      </Text>
-    </Stack>
+      </p>
+    </div>
   );
 };
 
-interface IActionButton extends Pick<IStatusActionBar, 'status'  | 'statusActionButtonTheme' | 'withLabels'> {
+interface IActionButton extends Pick<IStatusActionBar, 'status' | 'withLabels'> {
   me: Me;
   onOpenUnauthorizedModal: (action?: UnauthorizedModalAction) => void;
 }
@@ -205,7 +201,6 @@ interface IReplyButton extends IActionButton {
 
 const ReplyButton: React.FC<IReplyButton> = ({
   status,
-  statusActionButtonTheme,
   withLabels,
   me,
   onOpenUnauthorizedModal,
@@ -247,7 +242,6 @@ const ReplyButton: React.FC<IReplyButton> = ({
       count={status.replies_count}
       text={withLabels ? intl.formatMessage(messages.reply) : undefined}
       disabled={replyDisabled}
-      theme={statusActionButtonTheme}
     />
   );
 
@@ -276,7 +270,6 @@ interface IReblogButton extends IActionButton {
 
 const ReblogButton: React.FC<IReblogButton> = ({
   status,
-  statusActionButtonTheme,
   withLabels,
   me,
   onOpenUnauthorizedModal,
@@ -287,7 +280,7 @@ const ReblogButton: React.FC<IReblogButton> = ({
   const intl = useIntl();
 
   const { boostModal } = useSettings();
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
   const canReblog = useCanInteract(status, 'can_reblog');
 
   const { mutate: reblogStatus } = useReblogStatus(status.id);
@@ -330,8 +323,8 @@ const ReblogButton: React.FC<IReblogButton> = ({
 
   const reblogButton = (
     <StatusActionButton
+      className='⁂-status-action-bar__button--reblog'
       icon={reblogIcon}
-      color='success'
       disabled={!publicStatus}
       title={!publicStatus ? intl.formatMessage(messages.cannot_reblog) : intl.formatMessage(messages.reblog)}
       active={status.reblogged}
@@ -339,7 +332,6 @@ const ReblogButton: React.FC<IReblogButton> = ({
       onLongPress={handleReblogLongPress}
       count={status.reblogs_count + status.quotes_count}
       text={withLabels ? intl.formatMessage(messages.reblog) : undefined}
-      theme={statusActionButtonTheme}
     />
   );
 
@@ -385,7 +377,6 @@ const ReblogButton: React.FC<IReblogButton> = ({
 
 const FavouriteButton: React.FC<IActionButton> = ({
   status,
-  statusActionButtonTheme,
   me,
   withLabels,
   onOpenUnauthorizedModal,
@@ -393,7 +384,7 @@ const FavouriteButton: React.FC<IActionButton> = ({
   const features = useFeatures();
   const intl = useIntl();
 
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
   const canFavourite = useCanInteract(status, 'can_favourite');
 
   const { mutate: favouriteStatus } = useFavouriteStatus(status.id);
@@ -424,13 +415,11 @@ const FavouriteButton: React.FC<IActionButton> = ({
       title={intl.formatMessage(messages.favourite)}
       icon={features.statusDislikes ? require('@phosphor-icons/core/regular/thumbs-up.svg') : require('@phosphor-icons/core/regular/star.svg')}
       filledIcon={features.statusDislikes ? require('@phosphor-icons/core/fill/thumbs-up-fill.svg') : require('@phosphor-icons/core/fill/star-fill.svg')}
-      color='accent'
       onClick={handleFavouriteClick}
       onLongPress={handleFavouriteLongPress}
       active={status.favourited}
       count={status.favourites_count}
       text={withLabels ? intl.formatMessage(messages.favourite) : undefined}
-      theme={statusActionButtonTheme}
     />
   );
 
@@ -447,7 +436,6 @@ const FavouriteButton: React.FC<IActionButton> = ({
 
 const DislikeButton: React.FC<IActionButton> = ({
   status,
-  statusActionButtonTheme,
   withLabels,
   me,
   onOpenUnauthorizedModal,
@@ -455,7 +443,7 @@ const DislikeButton: React.FC<IActionButton> = ({
   const features = useFeatures();
   const intl = useIntl();
 
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
 
   const { mutate: dislikeStatus } = useDislikeStatus(status.id);
   const { mutate: undislikeStatus } = useUndislikeStatus(status.id);
@@ -483,13 +471,11 @@ const DislikeButton: React.FC<IActionButton> = ({
       title={intl.formatMessage(messages.disfavourite)}
       icon={require('@phosphor-icons/core/regular/thumbs-down.svg')}
       filledIcon={require('@phosphor-icons/core/fill/thumbs-down-fill.svg')}
-      color='accent'
       onClick={handleDislikeClick}
       onLongPress={handleDislikeLongPress}
       active={status.disliked}
       count={status.dislikes_count}
       text={withLabels ? intl.formatMessage(messages.disfavourite) : undefined}
-      theme={statusActionButtonTheme}
     />
   );
 };
@@ -498,7 +484,6 @@ const getLongerWrench = (emojis: Array<CustomEmoji>) => emojis.find(({ shortcode
 
 const WrenchButton: React.FC<IActionButton> = ({
   status,
-  statusActionButtonTheme,
   withLabels,
   me,
 }) => {
@@ -506,7 +491,7 @@ const WrenchButton: React.FC<IActionButton> = ({
   const intl = useIntl();
   const features = useFeatures();
 
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
   const { showWrenchButton } = useSettings();
 
   const { data: hasLongerWrench } = useCustomEmojis(getLongerWrench);
@@ -536,19 +521,16 @@ const WrenchButton: React.FC<IActionButton> = ({
       title={intl.formatMessage(messages.wrench)}
       icon={require('@phosphor-icons/core/regular/wrench.svg')}
       filledIcon={require('@phosphor-icons/core/fill/wrench-fill.svg')}
-      color='accent'
       onClick={handleWrenchClick}
       onLongPress={handleWrenchLongPress}
       active={wrenches?.me}
       count={wrenches?.count || undefined}
-      theme={statusActionButtonTheme}
     />
   );
 };
 
 const EmojiPickerButton: React.FC<Omit<IActionButton, 'onOpenUnauthorizedModal'>> = ({
   status,
-  statusActionButtonTheme,
   withLabels,
   me,
 }) => {
@@ -562,10 +544,7 @@ const EmojiPickerButton: React.FC<Omit<IActionButton, 'onOpenUnauthorizedModal'>
   };
 
   return me && !withLabels && features.emojiReacts && (
-    <EmojiPickerDropdown
-      onPickEmoji={handlePickEmoji}
-      theme={statusActionButtonTheme}
-    />
+    <EmojiPickerDropdown onPickEmoji={handlePickEmoji} />
   );
 };
 
@@ -577,7 +556,6 @@ interface IMenuButton extends IActionButton {
 
 const MenuButton: React.FC<IMenuButton> = ({
   status,
-  statusActionButtonTheme,
   me,
   expandable,
   fromBookmarks,
@@ -590,9 +568,9 @@ const MenuButton: React.FC<IMenuButton> = ({
   const { boostModal } = useSettings();
   const client = useClient();
 
-  const { statuses: statusesMeta, fetchTranslation, hideTranslation } = useStatusMetaStore();
-  const targetLanguage = statusesMeta[status.id]?.targetLanguage;
-  const { openModal } = useModalsStore();
+  const { fetchTranslation, hideTranslation } = useStatusMetaActions();
+  const { targetLanguage } = useStatusMeta(status.id);
+  const { openModal } = useModalsActions();
   const { group } = useGroup((status.group as Group)?.id as string);
   const { mutate: blockGroupMember } = useBlockGroupUserMutation(status.group?.id as string, status.account.id);
   const { getOrCreateChatByAccountId } = useChats();
@@ -600,13 +578,15 @@ const MenuButton: React.FC<IMenuButton> = ({
   const { mutate: unbookmarkStatus } = useUnbookmarkStatus(status.id);
   const { mutate: pinStatus } = usePinStatus(status?.id!);
   const { mutate: unpinStatus } = useUnpinStatus(status?.id!);
+  const { mutate: blockAccount } = useBlockAccountMutation(status.account_id);
+  const { mutate: unblockAccount } = useUnblockAccountMutation(status.account_id);
 
   const { groupRelationship } = useGroupRelationship(status.group_id || undefined);
   const features = useFeatures();
   const instance = useInstance();
   const { autoTranslate, deleteModal, knownLanguages } = useSettings();
 
-  const { translationLanguages } = useTranslationLanguages();
+  const { data: translationLanguages = {} } = useTranslationLanguages();
   const { mutate: reblogStatus } = useReblogStatus(status.id);
   const { mutate: unreblogStatus } = useUnreblogStatus(status.id);
 
@@ -712,13 +692,17 @@ const MenuButton: React.FC<IMenuButton> = ({
         heading: <FormattedMessage id='confirmations.block.heading' defaultMessage='Block @{name}' values={{ name: account.acct }} />,
         message: <FormattedMessage id='confirmations.block.message' defaultMessage='Are you sure you want to block {name}?' values={{ name: <strong className='break-words'>@{account.acct}</strong> }} />,
         confirm: intl.formatMessage(messages.blockConfirm),
-        onConfirm: () => dispatch(blockAccount(account.id)),
+        onConfirm: () => blockAccount(),
         secondary: intl.formatMessage(messages.blockAndReport),
         onSecondary: () => {
-          dispatch(blockAccount(account.id));
+          blockAccount();
           dispatch(initReport(ReportableEntities.STATUS, account, { status }));
         },
       });
+    };
+
+    const handleUnblockClick: React.EventHandler<React.MouseEvent> = (e) => {
+      unblockAccount();
     };
 
     const handleEmbed = () => {
@@ -994,11 +978,19 @@ const MenuButton: React.FC<IMenuButton> = ({
         action: handleMuteClick,
         icon: require('@phosphor-icons/core/regular/speaker-x.svg'),
       });
-      menu.push({
-        text: intl.formatMessage(messages.block, { name: username }),
-        action: handleBlockClick,
-        icon: require('@phosphor-icons/core/regular/prohibit.svg'),
-      });
+      if (status.account.relationship?.blocking) {
+        menu.push({
+          text: intl.formatMessage(messages.unblock, { name: username }),
+          action: handleUnblockClick,
+          icon: require('@phosphor-icons/core/regular/prohibit.svg'),
+        });
+      } else {
+        menu.push({
+          text: intl.formatMessage(messages.block, { name: username }),
+          action: handleBlockClick,
+          icon: require('@phosphor-icons/core/regular/prohibit.svg'),
+        });
+      }
       menu.push({
         text: intl.formatMessage(messages.report, { name: username }),
         action: handleReport,
@@ -1111,10 +1103,9 @@ const MenuButton: React.FC<IMenuButton> = ({
       <StatusActionButton
         title={intl.formatMessage(messages.more)}
         icon={require('@phosphor-icons/core/regular/dots-three.svg')}
-        theme={statusActionButtonTheme}
       />
     </DropdownMenu>
-  ), [menu, statusActionButtonTheme]);
+  ), [menu]);
 };
 
 interface IStatusActionBar {
@@ -1123,7 +1114,6 @@ interface IStatusActionBar {
   withLabels?: boolean;
   expandable?: boolean;
   space?: 'sm' | 'md' | 'lg';
-  statusActionButtonTheme?: 'default' | 'inverse';
   fromBookmarks?: boolean;
 }
 
@@ -1132,12 +1122,11 @@ const StatusActionBar: React.FC<IStatusActionBar> = ({
   withLabels = false,
   expandable,
   space = 'sm',
-  statusActionButtonTheme = 'default',
   fromBookmarks = false,
   rebloggedBy,
 }) => {
 
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
 
   const me = useAppSelector(state => state.me);
 
@@ -1156,25 +1145,13 @@ const StatusActionBar: React.FC<IStatusActionBar> = ({
     return null;
   }
 
-  const spacing: {
-    [key: string]: React.ComponentProps<typeof HStack>['space'];
-  } = {
-    'sm': 2,
-    'md': 8,
-    'lg': 0, // using justifyContent instead on the HStack
-  };
-
   return (
-    <HStack
-      justifyContent={space === 'lg' ? 'between' : undefined}
-      space={spacing[space]}
-      grow={space === 'lg'}
+    <div
+      className={`⁂-status-action-bar ⁂-status-action-bar--${space}`}
       onClick={onContainerClick}
-      alignItems='center'
     >
       <ReplyButton
         status={status}
-        statusActionButtonTheme={statusActionButtonTheme}
         withLabels={withLabels}
         me={me}
         onOpenUnauthorizedModal={onOpenUnauthorizedModal}
@@ -1183,7 +1160,6 @@ const StatusActionBar: React.FC<IStatusActionBar> = ({
 
       <ReblogButton
         status={status}
-        statusActionButtonTheme={statusActionButtonTheme}
         withLabels={withLabels}
         me={me}
         onOpenUnauthorizedModal={onOpenUnauthorizedModal}
@@ -1192,7 +1168,6 @@ const StatusActionBar: React.FC<IStatusActionBar> = ({
 
       <FavouriteButton
         status={status}
-        statusActionButtonTheme={statusActionButtonTheme}
         withLabels={withLabels}
         me={me}
         onOpenUnauthorizedModal={onOpenUnauthorizedModal}
@@ -1200,7 +1175,6 @@ const StatusActionBar: React.FC<IStatusActionBar> = ({
 
       <DislikeButton
         status={status}
-        statusActionButtonTheme={statusActionButtonTheme}
         withLabels={withLabels}
         me={me}
         onOpenUnauthorizedModal={onOpenUnauthorizedModal}
@@ -1208,7 +1182,6 @@ const StatusActionBar: React.FC<IStatusActionBar> = ({
 
       <WrenchButton
         status={status}
-        statusActionButtonTheme={statusActionButtonTheme}
         withLabels={withLabels}
         me={me}
         onOpenUnauthorizedModal={onOpenUnauthorizedModal}
@@ -1216,14 +1189,12 @@ const StatusActionBar: React.FC<IStatusActionBar> = ({
 
       <EmojiPickerButton
         status={status}
-        statusActionButtonTheme={statusActionButtonTheme}
         withLabels={withLabels}
         me={me}
       />
 
       <MenuButton
         status={status}
-        statusActionButtonTheme={statusActionButtonTheme}
         withLabels={withLabels}
         me={me}
         onOpenUnauthorizedModal={onOpenUnauthorizedModal}
@@ -1231,7 +1202,7 @@ const StatusActionBar: React.FC<IStatusActionBar> = ({
         fromBookmarks={fromBookmarks}
         publicStatus={publicStatus}
       />
-    </HStack>
+    </div>
   );
 };
 

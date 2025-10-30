@@ -6,10 +6,8 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { useHistory } from 'react-router-dom';
 import * as v from 'valibot';
 
-import { biteAccount, blockAccount, pinAccount, removeFromFollowers, unblockAccount, unmuteAccount, unpinAccount } from 'pl-fe/actions/accounts';
 import { mentionCompose, directCompose } from 'pl-fe/actions/compose';
 import { initReport, ReportableEntities } from 'pl-fe/actions/reports';
-import { useFollow } from 'pl-fe/api/hooks/accounts/use-follow';
 import Account from 'pl-fe/components/account';
 import AltIndicator from 'pl-fe/components/alt-indicator';
 import Badge from 'pl-fe/components/badge';
@@ -30,17 +28,25 @@ import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { useClient } from 'pl-fe/hooks/use-client';
 import { useFeatures } from 'pl-fe/hooks/use-features';
 import { useOwnAccount } from 'pl-fe/hooks/use-own-account';
-import { useSettings } from 'pl-fe/hooks/use-settings';
+import {
+  useBlockAccountMutation,
+  useFollowAccountMutation,
+  usePinAccountMutation,
+  useRemoveAccountFromFollowersMutation,
+  useUnblockAccountMutation,
+  useUnmuteAccountMutation,
+  useUnpinAccountMutation,
+} from 'pl-fe/queries/accounts/use-relationship';
 import { useChats } from 'pl-fe/queries/chats';
 import { queryClient } from 'pl-fe/queries/client';
 import { blockDomainMutationOptions, unblockDomainMutationOptions } from 'pl-fe/queries/settings/domain-blocks';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModalsActions } from 'pl-fe/stores/modals';
+import { useSettings } from 'pl-fe/stores/settings';
 import toast from 'pl-fe/toast';
-import { isDefaultHeader } from 'pl-fe/utils/accounts';
 import copy from 'pl-fe/utils/copy';
 
+import type { Account as AccountEntity } from 'pl-api';
 import type { PlfeResponse } from 'pl-fe/api';
-import type { Account as AccountEntity } from 'pl-fe/normalizers/account';
 
 const messages = defineMessages({
   edit_profile: { id: 'account.edit_profile', defaultMessage: 'Edit profile' },
@@ -134,8 +140,14 @@ const Header: React.FC<IHeader> = ({ account }) => {
 
   const features = useFeatures();
   const { account: ownAccount } = useOwnAccount();
-  const { follow } = useFollow();
-  const { openModal } = useModalsStore();
+  const { mutate: followAccount } = useFollowAccountMutation(account?.id!);
+  const { mutate: blockAccount } = useBlockAccountMutation(account?.id!);
+  const { mutate: unblockAccount } = useUnblockAccountMutation(account?.id!);
+  const { mutate: unmuteAccount } = useUnmuteAccountMutation(account?.id!);
+  const { mutate: pinAccount } = usePinAccountMutation(account?.id!);
+  const { mutate: unpinAccount } = useUnpinAccountMutation(account?.id!);
+  const { mutate: removeFromFollowers } = useRemoveAccountFromFollowersMutation(account?.id!);
+  const { openModal } = useModalsActions();
   const settings = useSettings();
 
   const { software } = features.version;
@@ -181,16 +193,16 @@ const Header: React.FC<IHeader> = ({ account }) => {
 
   const onBlock = () => {
     if (account.relationship?.blocking) {
-      dispatch(unblockAccount(account.id));
+      unblockAccount();
     } else {
       openModal('CONFIRM', {
         heading: <FormattedMessage id='confirmations.block.heading' defaultMessage='Block @{name}' values={{ name: account.acct }} />,
         message: <FormattedMessage id='confirmations.block.message' defaultMessage='Are you sure you want to block {name}?' values={{ name: <strong className='break-words'>@{account.acct}</strong> }} />,
         confirm: intl.formatMessage(messages.blockConfirm),
-        onConfirm: () => dispatch(blockAccount(account.id)),
+        onConfirm: () => blockAccount(),
         secondary: intl.formatMessage(messages.blockAndReport),
         onSecondary: () => {
-          dispatch(blockAccount(account.id));
+          blockAccount();
           dispatch(initReport(ReportableEntities.ACCOUNT, account));
         },
       });
@@ -207,26 +219,26 @@ const Header: React.FC<IHeader> = ({ account }) => {
 
   const onReblogToggle = () => {
     if (account.relationship?.showing_reblogs) {
-      follow(account.id, { reblogs: false });
+      followAccount({ reblogs: false });
     } else {
-      follow(account.id, { reblogs: true });
+      followAccount({ reblogs: true });
     }
   };
 
   const onEndorseToggle = () => {
     if (account.relationship?.endorsed) {
-      dispatch(unpinAccount(account.id))
-        .then(() => toast.success(intl.formatMessage(messages.userUnendorsed, { acct: account.acct })))
-        .catch(() => { });
+      unpinAccount(undefined, {
+        onSuccess: () => toast.success(intl.formatMessage(messages.userUnendorsed, { acct: account.acct })),
+      });
     } else {
-      dispatch(pinAccount(account.id))
-        .then(() => toast.success(intl.formatMessage(messages.userEndorsed, { acct: account.acct })))
-        .catch(() => { });
+      pinAccount(undefined, {
+        onSuccess: () => toast.success(intl.formatMessage(messages.userEndorsed, { acct: account.acct })),
+      });
     }
   };
 
   const onBite = () => {
-    dispatch(biteAccount(account.id))
+    client.accounts.biteAccount(account.id)
       .then(() => toast.success(intl.formatMessage(messages.userBit, { acct: account.acct })))
       .catch(() => toast.error(intl.formatMessage(messages.userBiteFail, { acct: account.acct })));
   };
@@ -243,7 +255,7 @@ const Header: React.FC<IHeader> = ({ account }) => {
 
   const onMute = () => {
     if (account.relationship?.muting) {
-      dispatch(unmuteAccount(account.id));
+      unmuteAccount();
     } else {
       openModal('MUTE', { accountId: account.id });
     }
@@ -279,10 +291,10 @@ const Header: React.FC<IHeader> = ({ account }) => {
         heading: <FormattedMessage id='confirmations.remove_from_followers.heading' defaultMessage='Remove {name} from followers' values={{ name: <strong className='break-words'>@{account.acct}</strong> }} />,
         message: <FormattedMessage id='confirmations.remove_from_followers.message' defaultMessage='Are you sure you want to remove {name} from your followers?' values={{ name: <strong className='break-words'>@{account.acct}</strong> }} />,
         confirm: intl.formatMessage(messages.removeFromFollowersConfirm),
-        onConfirm: () => dispatch(removeFromFollowers(account.id)),
+        onConfirm: () => removeFromFollowers(),
       });
     } else {
-      dispatch(removeFromFollowers(account.id));
+      removeFromFollowers();
     }
   };
 
@@ -601,7 +613,7 @@ const Header: React.FC<IHeader> = ({ account }) => {
     let header: React.ReactNode;
 
     if (settings.disableUserProvidedMedia) {
-      if (!account.header_description || isDefaultHeader(account.header)) return null;
+      if (!account.header_description || account.header_default) return null;
       else return (
         <Popover
           interaction='hover'
@@ -631,7 +643,7 @@ const Header: React.FC<IHeader> = ({ account }) => {
         />
       );
 
-      if (!isDefaultHeader(account.header)) {
+      if (!account.header_default) {
         header = (
           <a href={account.header} onClick={handleHeaderClick} target='_blank'>
             {header}

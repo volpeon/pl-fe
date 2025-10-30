@@ -6,25 +6,21 @@ import Text from 'pl-fe/components/ui/text';
 import Widget from 'pl-fe/components/ui/widget';
 import { type AccountGalleryAttachment, useGroupGallery } from 'pl-fe/hooks/use-account-gallery';
 import { MediaItem } from 'pl-fe/pages/accounts/account-gallery';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModalsActions } from 'pl-fe/stores/modals';
 
-import type { Group } from 'pl-fe/normalizers/group';
+import type { Group } from 'pl-api';
 
 interface IGroupMediaPanel {
   group: Group;
 }
 
 const GroupMediaPanel: React.FC<IGroupMediaPanel> = ({ group }) => {
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
 
   const { data: attachments, isLoading } = useGroupGallery(group.id);
 
   const handleOpenMedia = (attachment: AccountGalleryAttachment): void => {
-    if (attachment.type === 'video') {
-      openModal('VIDEO', { media: attachment, statusId: attachment.status_id });
-    } else {
-      openModal('MEDIA', { index: attachment.index, statusId: attachment.status_id });
-    }
+    openModal('MEDIA', { index: attachment.index, statusId: attachment.status_id });
   };
 
   const renderAttachments = () => {

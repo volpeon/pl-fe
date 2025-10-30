@@ -9,9 +9,9 @@ import Text from 'pl-fe/components/ui/text';
 import Emojify from 'pl-fe/features/emoji/emojify';
 import QuotedStatus from 'pl-fe/features/status/containers/quoted-status-container';
 import { usePlFeConfig } from 'pl-fe/hooks/use-pl-fe-config';
-import { useSettings } from 'pl-fe/hooks/use-settings';
 import { useStatusTranslation } from 'pl-fe/queries/statuses/use-status-translation';
-import { useStatusMetaStore } from 'pl-fe/stores/status-meta';
+import { useSettings } from 'pl-fe/stores/settings';
+import { useStatusMeta, useStatusMetaActions } from 'pl-fe/stores/status-meta';
 import { onlyEmoji as isOnlyEmoji } from 'pl-fe/utils/rich-content';
 
 import { getTextDirection } from '../utils/rtl';
@@ -93,8 +93,8 @@ const StatusContent: React.FC<IStatusContent> = React.memo(({
   const node = useRef<HTMLDivElement>(null);
   const spoilerNode = useRef<HTMLSpanElement>(null);
 
-  const { statuses: statusesMeta, collapseStatuses, expandStatuses } = useStatusMetaStore();
-  const statusMeta = statusesMeta[status.id] || {};
+  const { collapseStatuses, expandStatuses } = useStatusMetaActions();
+  const statusMeta = useStatusMeta(status.id);
   const { data: translation } = useStatusTranslation(status.id, statusMeta.targetLanguage);
 
   const withSpoiler = status.spoiler_text?.length > 0;

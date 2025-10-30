@@ -1,6 +1,6 @@
 import trim from 'lodash/trim';
 import { create, Draft } from 'mutative';
-import { applicationSchema, instanceSchema, PlApiClient, tokenSchema, type CredentialAccount, type CredentialApplication, type Token } from 'pl-api';
+import { type Account as AccountEntity, applicationSchema, instanceSchema, PlApiClient, tokenSchema, type CredentialAccount, type CredentialApplication, type Token } from 'pl-api';
 import * as v from 'valibot';
 
 import { decodeFromMarkup, MASTODON_PRELOAD_IMPORT, pleromaDecoder, type PreloadAction } from 'pl-fe/actions/preload';
@@ -22,7 +22,6 @@ import {
 import { ME_FETCH_SKIP, type MeAction } from '../actions/me';
 
 import type { PlfeResponse } from 'pl-fe/api';
-import type { Account as AccountEntity } from 'pl-fe/normalizers/account';
 
 const instance = (() => {
   try {
@@ -82,12 +81,6 @@ const buildKey = (parts: string[]) => parts.join(':');
 const NAMESPACE = trim(BuildConfig.FE_SUBDIRECTORY, '/') ? `pl-fe@${BuildConfig.FE_SUBDIRECTORY}` : 'pl-fe';
 
 const STORAGE_KEY = buildKey([NAMESPACE, 'auth']);
-const SESSION_KEY = buildKey([NAMESPACE, 'auth', 'me']);
-
-const getSessionUser = () => {
-  const id = sessionStorage.getItem(SESSION_KEY);
-  return validId(id) ? id : undefined;
-};
 
 const getLocalState = (): State | undefined => {
   const state = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
@@ -105,7 +98,6 @@ const getLocalState = (): State | undefined => {
   });
 };
 
-const sessionUser = getSessionUser();
 const localState = getLocalState();
 
 // Checks if the user has an ID and access token
@@ -146,10 +138,8 @@ const maybeShiftMe = (state: State | Draft<State>) => {
 
 // Set the user from the session or localStorage, whichever is valid first
 const setSessionUser = (state: State) => {
-  const me = getUrlOrId([
-    state.users[sessionUser!]!,
-    state.users[state.me!]!,
-  ].find(validUser));
+  const user = state.users[state.me!]!;
+  const me = getUrlOrId(validUser(user) ? user : undefined);
 
   state.me = me;
 };
@@ -179,16 +169,8 @@ const persistAuth = (state: State) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
 
-const persistSession = (state: State) => {
-  const me = state.me;
-  if (me && typeof me === 'string') {
-    sessionStorage.setItem(SESSION_KEY, me);
-  }
-};
-
 const persistState = (state: State) => {
   persistAuth(state);
-  persistSession(state);
 };
 
 const initialize = (state: State) => {
@@ -416,9 +398,6 @@ const auth = (oldState: State = initialState, action: Action): State => {
   if (state !== oldState) {
     // Persist the state in localStorage
     persistAuth(state);
-
-    // Persist the session
-    persistSession(state);
 
     // Reload the page under some conditions
     maybeReload(oldState, state, action);

@@ -6,11 +6,9 @@ import { useAppSelector } from 'pl-fe/hooks/use-app-selector';
 import { useClient } from 'pl-fe/hooks/use-client';
 import { useFeatures } from 'pl-fe/hooks/use-features';
 import { useLoggedIn } from 'pl-fe/hooks/use-logged-in';
-import { type Account, normalizeAccount } from 'pl-fe/normalizers/account';
+import { useRelationshipQuery } from 'pl-fe/queries/accounts/use-relationship';
 
-import { useRelationship } from './use-relationship';
-
-import type { Account as BaseAccount } from 'pl-api';
+import type { Account } from 'pl-api';
 
 interface UseAccountOpts {
   withRelationship?: boolean;
@@ -22,18 +20,18 @@ const useAccount = (accountId?: string, opts: UseAccountOpts = {}) => {
   const { me } = useLoggedIn();
   const { withRelationship } = opts;
 
-  const { entity, isUnauthorized, ...result } = useEntity<BaseAccount, Account>(
+  const { entity, isUnauthorized, ...result } = useEntity<Account>(
     [Entities.ACCOUNTS, accountId!],
     () => client.accounts.getAccount(accountId!),
-    { enabled: !!accountId, transform: normalizeAccount },
+    { enabled: !!accountId },
   );
 
   const meta = useAppSelector((state) => accountId ? state.accounts_meta[accountId] : undefined);
 
   const {
-    relationship,
+    data: relationship,
     isLoading: isRelationshipLoading,
-  } = useRelationship(accountId, { enabled: withRelationship });
+  } = useRelationshipQuery(withRelationship ? entity?.id : undefined);
 
   const isBlocked = entity?.relationship?.blocked_by === true;
   const isUnavailable = (me === entity?.id) ? false : (isBlocked && !features.blockersVisible);
@@ -51,7 +49,6 @@ const useAccount = (accountId?: string, opts: UseAccountOpts = {}) => {
 
   return {
     ...result,
-    isLoading: result.isLoading,
     isRelationshipLoading,
     isUnauthorized,
     isUnavailable,

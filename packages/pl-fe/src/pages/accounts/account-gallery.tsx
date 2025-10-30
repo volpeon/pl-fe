@@ -13,9 +13,9 @@ import StillImage from 'pl-fe/components/still-image';
 import Column from 'pl-fe/components/ui/column';
 import Spinner from 'pl-fe/components/ui/spinner';
 import { type AccountGalleryAttachment, useAccountGallery } from 'pl-fe/hooks/use-account-gallery';
-import { useSettings } from 'pl-fe/hooks/use-settings';
 import { isIOS } from 'pl-fe/is-mobile';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModalsActions } from 'pl-fe/stores/modals';
+import { useSettings } from 'pl-fe/stores/settings';
 
 interface IMediaItem {
   attachment: AccountGalleryAttachment;
@@ -143,7 +143,7 @@ const MediaItem: React.FC<IMediaItem> = ({ attachment, onOpenMedia, isLast }) =>
 
 const AccountGalleryPage = () => {
   const { username } = useParams<{ username: string }>();
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
 
   const {
     account,
@@ -169,11 +169,7 @@ const AccountGalleryPage = () => {
   };
 
   const handleOpenMedia = (attachment: AccountGalleryAttachment) => {
-    if (attachment.type === 'video') {
-      openModal('VIDEO', { media: attachment, statusId: attachment.status_id });
-    } else {
-      openModal('MEDIA', { index: attachment.index, statusId: attachment.status_id });
-    }
+    openModal('MEDIA', { index: attachment.index, statusId: attachment.status_id });
   };
 
   if (accountLoading || isLoading) {

@@ -17,16 +17,16 @@ import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { useAppSelector } from 'pl-fe/hooks/use-app-selector';
 import { useFavouriteStatus, useReblogStatus, useUnfavouriteStatus, useUnreblogStatus } from 'pl-fe/queries/statuses/use-status-interactions';
 import { RootState } from 'pl-fe/store';
-import { useModalsStore } from 'pl-fe/stores/modals';
-import { useSettingsStore } from 'pl-fe/stores/settings';
-import { useStatusMetaStore } from 'pl-fe/stores/status-meta';
+import { useModalsActions } from 'pl-fe/stores/modals';
+import { useSettings } from 'pl-fe/stores/settings';
+import { useStatusMetaActions } from 'pl-fe/stores/status-meta';
 import { selectChild } from 'pl-fe/utils/scroll-utils';
 import { textForScreenReader } from 'pl-fe/utils/status';
 
 import DetailedStatus from './detailed-status';
 import ThreadStatus from './thread-status';
 
-import type { Account } from 'pl-fe/normalizers/account';
+import type { Account } from 'pl-api';
 import type { Status } from 'pl-fe/normalizers/status';
 import type { SelectedStatus } from 'pl-fe/selectors';
 import type { VirtuosoHandle } from 'react-virtuoso';
@@ -140,9 +140,9 @@ const Thread = ({
   const history = useHistory();
   const intl = useIntl();
 
-  const { expandStatuses, revealStatusesMedia, toggleStatusesMediaHidden } = useStatusMetaStore();
-  const { openModal } = useModalsStore();
-  const { settings: { boostModal, threads: { displayMode } } } = useSettingsStore();
+  const { expandStatuses, revealStatusesMedia, toggleStatusesMediaHidden } = useStatusMetaActions();
+  const { openModal } = useModalsActions();
+  const { boostModal, threads: { displayMode } } = useSettings();
 
   const { mutate: favouriteStatus } = useFavouriteStatus(status.id);
   const { mutate: unfavouriteStatus } = useUnfavouriteStatus(status.id);
@@ -195,13 +195,7 @@ const Thread = ({
     e?.preventDefault();
 
     if (media && media.length) {
-      const firstAttachment = media[0];
-
-      if (media.length === 1 && firstAttachment.type === 'video') {
-        openModal('VIDEO', { media: firstAttachment, statusId: status.id });
-      } else {
-        openModal('MEDIA', { media, index: 0, statusId: status.id });
-      }
+      openModal('MEDIA', { media, index: 0, statusId: status.id });
     }
   };
 
@@ -326,6 +320,7 @@ const Thread = ({
               <DetailedStatus
                 status={status}
                 onOpenCompareHistoryModal={handleOpenCompareHistoryModal}
+                withMedia={withMedia}
               />
 
               <hr className='-mx-4 mb-2 max-w-[100vw] border-t-2 black:border-t dark:border-gray-800' />

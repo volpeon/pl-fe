@@ -8,14 +8,11 @@ import { getLocale } from 'pl-fe/actions/settings';
 import { updateStatus } from 'pl-fe/actions/statuses';
 import { deleteFromTimelines, processTimelineUpdate } from 'pl-fe/actions/timelines';
 import { useStatContext } from 'pl-fe/contexts/stat-context';
-import { importEntities } from 'pl-fe/entity-store/actions';
-import { Entities } from 'pl-fe/entity-store/entities';
-import { selectEntity } from 'pl-fe/entity-store/selectors';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { useLoggedIn } from 'pl-fe/hooks/use-logged-in';
 import messages from 'pl-fe/messages';
 import { queryClient } from 'pl-fe/queries/client';
-import { useSettingsStore } from 'pl-fe/stores/settings';
+import { useSettings } from 'pl-fe/stores/settings';
 import { getUnreadChatsCount, updateChatListItem } from 'pl-fe/utils/chats';
 import { play, soundCache } from 'pl-fe/utils/sounds';
 
@@ -73,16 +70,12 @@ const updateFollowRelationships = (update: FollowRelationshipUpdate) =>
     const state = getState();
 
     const me = state.me;
-    const relationship = selectEntity<Relationship>(state, Entities.RELATIONSHIPS, update.following.id);
 
-    if (update.follower.id === me && relationship) {
-      const updated = {
+    if (update.follower.id === me) {
+      queryClient.setQueryData<Relationship>(['accountRelationships', update.following.id], (relationship) => relationship ? ({
         ...relationship,
         ...followStateToRelationship(update.state),
-      };
-
-      // Add a small delay to deal with API race conditions.
-      setTimeout(() => dispatch(importEntities([updated], Entities.RELATIONSHIPS)), 300);
+      }) : undefined);
     }
   };
 
@@ -103,7 +96,7 @@ const useUserStream = () => {
   const { isLoggedIn } = useLoggedIn();
   const dispatch = useAppDispatch();
   const statContext = useStatContext();
-  const { settings } = useSettingsStore();
+  const settings = useSettings();
 
   const listener = useCallback((event: StreamingEvent) => {
     switch (event.event) {

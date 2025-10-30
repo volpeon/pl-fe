@@ -4,8 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import StillImage, { IStillImage } from 'pl-fe/components/still-image';
-import { useSettings } from 'pl-fe/hooks/use-settings';
-import { isDefaultAvatar } from 'pl-fe/utils/accounts';
+import { useSettings } from 'pl-fe/stores/settings';
 
 import AltIndicator from '../alt-indicator';
 
@@ -24,13 +23,14 @@ const messages = defineMessages({
   avatar_with_content: { id: 'account.avatar.with_content', defaultMessage: 'Avatar for {username}: {alt}' },
 });
 
-interface IAvatar extends Pick<IStillImage, 'alt' | 'src' | 'onError' | 'className'> {
+interface IAvatar extends Pick<IStillImage, 'alt' | 'src' | 'staticSrc' | 'onError' | 'className'> {
   /** Width and height of the avatar in pixels. */
   size?: number;
   /** Whether the user is a cat. */
   isCat?: boolean;
   username?: string;
   showAlt?: boolean;
+  isDefault?: boolean;
 }
 
 const fac = new FastAverageColor();
@@ -40,7 +40,7 @@ const Avatar = (props: IAvatar) => {
   const intl = useIntl();
   const { disableUserProvidedMedia } = useSettings();
 
-  const { alt, src, size = AVATAR_SIZE, className, isCat } = props;
+  const { alt, src, size = AVATAR_SIZE, className, isCat, isDefault } = props;
 
   const [color, setColor] = useState<string | undefined>(undefined);
   const [isAvatarMissing, setIsAvatarMissing] = useState(false);
@@ -74,7 +74,7 @@ const Avatar = (props: IAvatar) => {
   }, [size, color]);
 
   if (disableUserProvidedMedia) {
-    if (isAvatarMissing || !alt || isDefaultAvatar(src)) return null;
+    if (isAvatarMissing || !alt || isDefault) return null;
     return (
       <Popover
         interaction='hover'
@@ -102,7 +102,7 @@ const Avatar = (props: IAvatar) => {
         style={style}
         className={clsx('relative rounded-lg bg-gray-200 leading-[0] dark:bg-gray-900', isCat && 'avatar__cat', className)}
       >
-        <div className='absolute inset-0 z-[1] flex items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-900'>
+        <div className='absolute inset-0 z-[1] flex items-center justify-center rounded-[inherit] bg-gray-200 dark:bg-gray-900'>
           <Icon
             src={require('@phosphor-icons/core/regular/image-square.svg')}
             className='size-4 text-gray-500 dark:text-gray-700'
@@ -120,10 +120,9 @@ const Avatar = (props: IAvatar) => {
 
   return (
     <StillImage
-      className={clsx('rounded-lg leading-[0]', isCat && 'avatar__cat bg-gray-200 dark:bg-gray-900', className)}
-      innerClassName='rounded-lg text-sm'
+      className={clsx('⁂-avatar', isCat && '⁂-avatar--cat', className)}
       style={style}
-      src={src}
+      src={src || require('pl-fe/assets/images/avatar-missing.png')}
       alt={altText}
       onError={handleLoadFailure}
     />

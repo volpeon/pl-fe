@@ -1,8 +1,8 @@
 import React, { Suspense } from 'react';
 
 import { MediaGallery } from 'pl-fe/features/ui/util/async-components';
-import { useSettings } from 'pl-fe/hooks/use-settings';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModalsActions } from 'pl-fe/stores/modals';
+import { useSettings } from 'pl-fe/stores/settings';
 
 import { useMediaVisible } from './statuses/sensitive-content-overlay';
 
@@ -10,16 +10,16 @@ import type { MediaAttachment } from 'pl-api';
 import type { Status } from 'pl-fe/normalizers/status';
 
 interface IAttachmentThumbs {
-  status: Pick<Status, 'media_attachments' | 'sensitive'> & Partial<Pick<Status, 'filtered'>>;
+  status: Pick<Status, 'media_attachments' | 'sensitive'> & Partial<Pick<Status, 'filtered' | 'id'>>;
   onClick?(): void;
 }
 
 const AttachmentThumbs = ({ status, onClick }: IAttachmentThumbs) => {
   const { displayMedia } = useSettings();
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
 
   const fallback = <div className='⁂-media-gallery--compact' />;
-  const onOpenMedia = (media: Array<MediaAttachment>, index: number) => openModal('MEDIA', { media, index });
+  const onOpenMedia = (media: Array<MediaAttachment>, index: number) => openModal('MEDIA', { statusId: status.id, media, index });
 
   const [visible] = useMediaVisible(status, displayMedia);
 

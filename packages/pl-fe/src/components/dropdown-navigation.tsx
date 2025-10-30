@@ -23,11 +23,11 @@ import { scheduledStatusesCountQueryOptions } from 'pl-fe/queries/statuses/sched
 import { useDraftStatusesCountQuery } from 'pl-fe/queries/statuses/use-draft-statuses';
 import { useInteractionRequestsCount } from 'pl-fe/queries/statuses/use-interaction-requests';
 import { makeGetOtherAccounts } from 'pl-fe/selectors';
-import { useSettingsStore } from 'pl-fe/stores/settings';
-import { useUiStore } from 'pl-fe/stores/ui';
+import { useSettings } from 'pl-fe/stores/settings';
+import { useIsSidebarOpen, useUiStoreActions } from 'pl-fe/stores/ui';
 import sourceCode from 'pl-fe/utils/code';
 
-import type { Account as AccountEntity } from 'pl-fe/normalizers/account';
+import type { Account as AccountEntity } from 'pl-api';
 
 interface IDropdownNavigationLink {
   href?: string;
@@ -66,7 +66,8 @@ const DropdownNavigationLink: React.FC<IDropdownNavigationLink> = React.memo(({ 
 const DropdownNavigation: React.FC = React.memo((): JSX.Element | null => {
   const dispatch = useAppDispatch();
 
-  const { isSidebarOpen, closeSidebar } = useUiStore();
+  const isSidebarOpen = useIsSidebarOpen();
+  const { closeSidebar } = useUiStoreActions();
 
   const me = useAppSelector((state) => state.me);
 
@@ -79,7 +80,7 @@ const DropdownNavigation: React.FC = React.memo((): JSX.Element | null => {
   const features = useFeatures();
   const { account } = useAccount(me || undefined);
   const otherAccounts = useAppSelector((state) => getOtherAccounts(state));
-  const { settings } = useSettingsStore();
+  const settings = useSettings();
   const followRequestsCount = useFollowRequestsCount().data || 0;
   const interactionRequestsCount = useInteractionRequestsCount().data || 0;
   const scheduledStatusCount = useInfiniteQuery(authenticatedScheduledStatusesCountQueryOptions).data || 0;

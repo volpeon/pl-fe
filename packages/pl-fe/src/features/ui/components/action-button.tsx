@@ -1,26 +1,26 @@
 import React from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
-import {
-  blockAccount,
-  unblockAccount,
-  muteAccount,
-  unmuteAccount,
-  biteAccount,
-} from 'pl-fe/actions/accounts';
-import { useFollow } from 'pl-fe/api/hooks/accounts/use-follow';
-import { useRelationship } from 'pl-fe/api/hooks/accounts/use-relationship';
 import Button from 'pl-fe/components/ui/button';
 import HStack from 'pl-fe/components/ui/hstack';
 import Spinner from 'pl-fe/components/ui/spinner';
-import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
+import { useClient } from 'pl-fe/hooks/use-client';
 import { useFeatures } from 'pl-fe/hooks/use-features';
 import { useLoggedIn } from 'pl-fe/hooks/use-logged-in';
 import { useAcceptFollowRequestMutation, useRejectFollowRequestMutation } from 'pl-fe/queries/accounts/use-follow-requests';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import {
+  useRelationshipQuery,
+  useBlockAccountMutation,
+  useUnblockAccountMutation,
+  useMuteAccountMutation,
+  useUnmuteAccountMutation,
+  useFollowAccountMutation,
+  useUnfollowAccountMutation,
+} from 'pl-fe/queries/accounts/use-relationship';
+import { useModalsActions } from 'pl-fe/stores/modals';
 import toast from 'pl-fe/toast';
 
-import type { Account } from 'pl-fe/normalizers/account';
+import type { Account } from 'pl-api';
 
 const messages = defineMessages({
   block: { id: 'account.block', defaultMessage: 'Block @{name}' },
@@ -56,40 +56,46 @@ interface IActionButton {
  * `actionType` prop.
  */
 const ActionButton: React.FC<IActionButton> = ({ account, actionType, small = true }) => {
-  const dispatch = useAppDispatch();
   const features = useFeatures();
   const intl = useIntl();
+  const client = useClient();
 
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
   const { isLoggedIn, me } = useLoggedIn();
-  const { follow, unfollow } = useFollow();
 
-  const { relationship, isLoading } = useRelationship(account.id, { enabled: true });
+  const { mutate: followAccount, isPending: isPendingFollow } = useFollowAccountMutation(account.id);
+  const { mutate: unfollowAccount, isPending: isPendingUnfollow } = useUnfollowAccountMutation(account.id);
+  const { mutate: blockAccount } = useBlockAccountMutation(account.id);
+  const { mutate: unblockAccount } = useUnblockAccountMutation(account.id);
+  const { mutate: muteAccount } = useMuteAccountMutation(account.id);
+  const { mutate: unmuteAccount } = useUnmuteAccountMutation(account.id);
+
+  const { data: relationship, isLoading } = useRelationshipQuery(account.id);
 
   const { mutate: authorizeFollowRequest } = useAcceptFollowRequestMutation(account.id);
   const { mutate: rejectFollowRequest } = useRejectFollowRequestMutation(account.id);
 
   const handleFollow = () => {
     if (relationship?.following || relationship?.requested) {
-      unfollow(account.id);
+      unfollowAccount();
     } else {
-      follow(account.id);
+      followAccount(undefined);
     }
   };
 
   const handleBlock = () => {
     if (relationship?.blocking) {
-      dispatch(unblockAccount(account.id));
+      unblockAccount();
     } else {
-      dispatch(blockAccount(account.id));
+      blockAccount();
     }
   };
 
   const handleMute = () => {
     if (relationship?.muting) {
-      dispatch(unmuteAccount(account.id));
+      unmuteAccount();
     } else {
-      dispatch(muteAccount(account.id));
+      muteAccount(undefined);
     }
   };
 
@@ -102,7 +108,7 @@ const ActionButton: React.FC<IActionButton> = ({ account, actionType, small = tr
   };
 
   const handleBite = () => {
-    dispatch(biteAccount(account.id))
+    client.accounts.biteAccount(account.id)
       .then(() => toast.success(intl.formatMessage(messages.userBit, { acct: account.acct })))
       .catch(() => toast.error(intl.formatMessage(messages.userBiteFail, { acct: account.acct })));
   };
@@ -240,9 +246,9 @@ const ActionButton: React.FC<IActionButton> = ({ account, actionType, small = tr
       }
     }
 
+    if (!relationship && !isLoading) return null;
+
     if (!relationship) {
-      if (!isLoading) return null;
-      // Wait until the relationship is loaded
       return (
         <Button
           size='xs'
@@ -267,7 +273,7 @@ const ActionButton: React.FC<IActionButton> = ({ account, actionType, small = tr
       return (
         <Button
           size='sm'
-          disabled={blockedBy}
+          disabled={blockedBy || isPendingFollow || isPendingUnfollow}
           theme={isFollowing ? 'secondary' : 'primary'}
           icon={blockedBy ? require('@phosphor-icons/core/regular/prohibit.svg') : (!isFollowing && require('@phosphor-icons/core/regular/plus.svg'))}
           onClick={handleFollow}

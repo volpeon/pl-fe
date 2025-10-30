@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import { Link, useHistory, useParams } from 'react-router-dom';
 
-import { blockAccount, unblockAccount } from 'pl-fe/actions/accounts';
 import DropdownMenu, { type Menu } from 'pl-fe/components/dropdown-menu';
 import Avatar from 'pl-fe/components/ui/avatar';
 import HStack from 'pl-fe/components/ui/hstack';
@@ -11,19 +10,15 @@ import Stack from 'pl-fe/components/ui/stack';
 import Text from 'pl-fe/components/ui/text';
 import VerificationBadge from 'pl-fe/components/verification-badge';
 import { useChatContext } from 'pl-fe/contexts/chat-context';
-import { Entities } from 'pl-fe/entity-store/entities';
-import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
-import { useAppSelector } from 'pl-fe/hooks/use-app-selector';
 import { useFeatures } from 'pl-fe/hooks/use-features';
+import { useBlockAccountMutation, useUnblockAccountMutation, useRelationshipQuery } from 'pl-fe/queries/accounts/use-relationship';
 import { useChat, useChatActions, useChats } from 'pl-fe/queries/chats';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModalsActions } from 'pl-fe/stores/modals';
 
 import Chat from '../../chat';
 
 import BlankslateEmpty from './blankslate-empty';
 import BlankslateWithChats from './blankslate-with-chats';
-
-import type { Relationship } from 'pl-api';
 
 const messages = defineMessages({
   blockMessage: { id: 'chat_settings.block.message', defaultMessage: 'Blocking will prevent this profile from direct messaging you and viewing your content. You can unblock later.' },
@@ -41,23 +36,25 @@ const messages = defineMessages({
 });
 
 const ChatPageMain = () => {
-  const dispatch = useAppDispatch();
   const intl = useIntl();
   const features = useFeatures();
   const history = useHistory();
 
   const { chatId } = useParams<{ chatId: string }>();
 
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
   const { data: chat } = useChat(chatId);
   const { currentChatId } = useChatContext();
   const { chatsQuery: { data: chats, isLoading } } = useChats();
+
+  const { mutate: blockAccount } = useBlockAccountMutation(chat?.account.id!);
+  const { mutate: unblockAccount } = useUnblockAccountMutation(chat?.account.id!);
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   const { deleteChat } = useChatActions(chat?.id as string);
 
-  const isBlocking = !!useAppSelector((state) => chat?.account?.id && (state.entities[Entities.RELATIONSHIPS]?.store[chat.account.id] as Relationship)?.blocked_by);
+  const isBlocked = !!useRelationshipQuery(chat?.account.id).data?.blocked_by;
 
   const handleBlockUser = () => {
     openModal('CONFIRM', {
@@ -65,7 +62,7 @@ const ChatPageMain = () => {
       message: intl.formatMessage(messages.blockMessage),
       confirm: intl.formatMessage(messages.blockConfirm),
       confirmationTheme: 'primary',
-      onConfirm: () => dispatch(blockAccount(chat?.account.id as string)),
+      onConfirm: () => blockAccount(),
     });
   };
 
@@ -75,7 +72,7 @@ const ChatPageMain = () => {
       message: intl.formatMessage(messages.unblockMessage),
       confirm: intl.formatMessage(messages.unblockConfirm),
       confirmationTheme: 'primary',
-      onConfirm: () => dispatch(unblockAccount(chat?.account.id as string)),
+      onConfirm: () => unblockAccount(),
     });
   };
 
@@ -114,8 +111,8 @@ const ChatPageMain = () => {
   const menuItems: Menu = [
     {
       icon: require('@phosphor-icons/core/regular/prohibit.svg'),
-      text: intl.formatMessage(isBlocking ? messages.unblockUser : messages.blockUser, { acct: chat.account.acct }),
-      action: isBlocking ? handleUnblockUser : handleBlockUser,
+      text: intl.formatMessage(isBlocked ? messages.unblockUser : messages.blockUser, { acct: chat.account.acct }),
+      action: isBlocked ? handleUnblockUser : handleBlockUser,
     },
   ];
 
@@ -157,7 +154,7 @@ const ChatPageMain = () => {
           src={require('@phosphor-icons/core/regular/info.svg')}
           component={() => (
             <HStack className='px-4 py-2' alignItems='center' space={3}>
-              <Avatar src={chat.account.avatar_static} alt={chat.account.avatar_description} size={50} isCat={chat.account.is_cat} username={chat.account.username} />
+              <Avatar src={chat.account.avatar} staticSrc={chat.account.avatar_static} alt={chat.account.avatar_description} size={50} isCat={chat.account.is_cat} username={chat.account.username} />
               <Stack>
                 <Text weight='semibold'>{chat.account.display_name}</Text>
                 <Text size='sm' theme='primary'>@{chat.account.acct}</Text>

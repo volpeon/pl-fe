@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Link, useHistory } from 'react-router-dom';
@@ -14,7 +15,7 @@ import VerificationBadge from 'pl-fe/components/verification-badge';
 import Emojify from 'pl-fe/features/emoji/emojify';
 import ActionButton from 'pl-fe/features/ui/components/action-button';
 import { useAppSelector } from 'pl-fe/hooks/use-app-selector';
-import { useSettings } from 'pl-fe/hooks/use-settings';
+import { useSettings } from 'pl-fe/stores/settings';
 import { getAcct } from 'pl-fe/utils/accounts';
 import { displayFqn } from 'pl-fe/utils/state';
 
@@ -22,7 +23,7 @@ import Badge from './badge';
 import { ParsedContent } from './parsed-content';
 import RelativeTimestamp from './relative-timestamp';
 
-import type { Account as AccountSchema } from 'pl-fe/normalizers/account';
+import type { Account as AccountSchema } from 'pl-api';
 import type { StatusApprovalStatus } from 'pl-fe/normalizers/status';
 
 interface IInstanceFavicon {
@@ -108,6 +109,7 @@ interface IAccount {
   note?: string;
   items?: React.ReactNode;
   disabled?: boolean;
+  muteExpiresAt?: string | null;
 }
 
 const Account = ({
@@ -135,6 +137,7 @@ const Account = ({
   note,
   items,
   disabled,
+  muteExpiresAt,
 }: IAccount) => {
   const overflowRef = useRef<HTMLDivElement>(null);
   const actionRef = useRef<HTMLDivElement>(null);
@@ -220,8 +223,8 @@ const Account = ({
   } : {};
 
   if (disabled) return (
-    <div data-testid='account' className='group block w-full shrink-0' ref={overflowRef}>
-      <HStack alignItems={actionAlignment} space={3} justifyContent='between'>
+    <div data-testid='account' className={clsx('⁂-account-card', { '⁂-account-card--action-top': actionAlignment === 'top' })} ref={overflowRef}>
+      <div>
         <HStack alignItems='center' space={3} className='max-w-full'>
           {disableUserProvidedMedia ? (
             <Avatar src={account.avatar} alt={account.avatar_description} username={account.username} />
@@ -240,11 +243,7 @@ const Account = ({
 
           <div className='grow overflow-hidden'>
             <HStack space={1} alignItems='center' grow>
-              <Text
-                size='sm'
-                weight='semibold'
-                truncate
-              >
+              <Text size='sm' weight='semibold' truncate>
                 <Emojify text={account.display_name} emojis={account.emojis} />
               </Text>
 
@@ -266,7 +265,7 @@ const Account = ({
                     />
 
                     {account.favicon && !disableUserProvidedMedia && (
-                      <Text tag='span' theme='muted' size='sm'>&middot;</Text>
+                      <span className='⁂-separator' />
                     )}
                   </>
                 )}
@@ -284,13 +283,13 @@ const Account = ({
         <div ref={actionRef}>
           {renderAction()}
         </div>
-      </HStack>
+      </div>
     </div>
   );
 
   return (
-    <div data-testid='account' className='group block w-full shrink-0' ref={overflowRef}>
-      <HStack alignItems={actionAlignment} space={3} justifyContent='between'>
+    <div data-testid='account' className={clsx('⁂-account-card', { '⁂-account-card--action-top': actionAlignment === 'top' })} ref={overflowRef}>
+      <div>
         <HStack alignItems={withAccountNote || note ? 'top' : 'center'} space={3} className='max-w-full'>
           {withAvatar && (disableUserProvidedMedia ? (
             <Avatar src={account.avatar} alt={account.avatar_description} username={account.username} />
@@ -319,11 +318,7 @@ const Account = ({
             >
               <LinkEl {...linkProps}>
                 <HStack space={1} alignItems='center' grow>
-                  <Text
-                    size='sm'
-                    weight='semibold'
-                    truncate
-                  >
+                  <Text size='sm' weight='semibold' truncate>
                     <Emojify text={account.display_name} emojis={account.emojis} />
                   </Text>
 
@@ -346,7 +341,7 @@ const Account = ({
                       className='size-4 text-gray-600'
                     />
                     {account.favicon && !disableUserProvidedMedia && (
-                      <Text tag='span' theme='muted' size='sm'>&middot;</Text>
+                      <span className='⁂-separator' />
                     )}
                   </>
                 )}
@@ -357,7 +352,7 @@ const Account = ({
 
                 {(timestamp) ? (
                   <>
-                    <Text tag='span' theme='muted' size='sm'>&middot;</Text>
+                    <span className='⁂-separator' />
 
                     {timestampUrl ? (
                       <Link to={timestampUrl} className='hover:underline' onClick={(event) => event.stopPropagation()}>
@@ -371,7 +366,7 @@ const Account = ({
 
                 {approvalStatus && ['pending', 'rejected'].includes(approvalStatus) && (
                   <>
-                    <Text tag='span' theme='muted' size='sm'>&middot;</Text>
+                    <span className='⁂-separator' />
 
                     <Text tag='span' theme='muted' size='sm'>
                       {approvalStatus === 'pending'
@@ -381,11 +376,11 @@ const Account = ({
                   </>
                 )}
 
-                {actionType === 'muting' && account.mute_expires_at ? (
+                {actionType === 'muting' && muteExpiresAt ? (
                   <>
-                    <Text tag='span' theme='muted' size='sm'>&middot;</Text>
+                    <span className='⁂-separator' />
 
-                    <Text theme='muted' size='sm'><RelativeTimestamp timestamp={account.mute_expires_at} futureDate /></Text>
+                    <Text theme='muted' size='sm'><RelativeTimestamp timestamp={muteExpiresAt} futureDate /></Text>
                   </>
                 ) : null}
 
@@ -415,7 +410,7 @@ const Account = ({
         <div ref={actionRef}>
           {renderAction()}
         </div>
-      </HStack>
+      </div>
     </div>
   );
 };

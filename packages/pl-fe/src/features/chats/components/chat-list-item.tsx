@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { useHistory } from 'react-router-dom';
 
-import { useRelationship } from 'pl-fe/api/hooks/accounts/use-relationship';
 import DropdownMenu from 'pl-fe/components/dropdown-menu';
 import { ParsedContent } from 'pl-fe/components/parsed-content';
 import RelativeTimestamp from 'pl-fe/components/relative-timestamp';
@@ -14,8 +13,9 @@ import Text from 'pl-fe/components/ui/text';
 import VerificationBadge from 'pl-fe/components/verification-badge';
 import { useChatContext } from 'pl-fe/contexts/chat-context';
 import { useFeatures } from 'pl-fe/hooks/use-features';
+import { useRelationshipQuery } from 'pl-fe/queries/accounts/use-relationship';
 import { useChatActions } from 'pl-fe/queries/chats';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModalsActions } from 'pl-fe/stores/modals';
 
 import type { Chat } from 'pl-api';
 import type { Menu } from 'pl-fe/components/dropdown-menu';
@@ -34,14 +34,14 @@ interface IChatListItemInterface {
 }
 
 const ChatListItem: React.FC<IChatListItemInterface> = ({ chat, onClick }) => {
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
   const intl = useIntl();
   const features = useFeatures();
   const history = useHistory();
 
   const { isUsingMainChatPage } = useChatContext();
   const { deleteChat } = useChatActions(chat?.id as string);
-  const { relationship } = useRelationship(chat?.account.id, { enabled: !!chat });
+  const { data: relationship } = useRelationshipQuery(chat?.account.id);
 
   const isBlocked = relationship?.blocked_by && false;
   const isBlocking = relationship?.blocking && false;

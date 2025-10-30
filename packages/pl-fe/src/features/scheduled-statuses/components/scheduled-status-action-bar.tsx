@@ -5,8 +5,8 @@ import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 import Button from 'pl-fe/components/ui/button';
 import HStack from 'pl-fe/components/ui/hstack';
 import { cancelScheduledStatusMutationOptions } from 'pl-fe/queries/statuses/scheduled-statuses';
-import { useModalsStore } from 'pl-fe/stores/modals';
-import { useSettingsStore } from 'pl-fe/stores/settings';
+import { useModalsActions } from 'pl-fe/stores/modals';
+import { useSettings } from 'pl-fe/stores/settings';
 
 import type { Status as StatusEntity } from 'pl-fe/normalizers/status';
 
@@ -25,8 +25,8 @@ const ScheduledStatusActionBar: React.FC<IScheduledStatusActionBar> = ({ status 
   const intl = useIntl();
 
   const { mutate: cancelScheduledStatus } = useMutation(cancelScheduledStatusMutationOptions(status.id));
-  const { openModal } = useModalsStore();
-  const { settings } = useSettingsStore();
+  const { openModal } = useModalsActions();
+  const settings = useSettings();
 
   const handleCancelClick = () => {
     const deleteModal = settings.deleteModal;

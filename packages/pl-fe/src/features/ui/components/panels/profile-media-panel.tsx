@@ -6,26 +6,21 @@ import Text from 'pl-fe/components/ui/text';
 import Widget from 'pl-fe/components/ui/widget';
 import { type AccountGalleryAttachment, useAccountGallery } from 'pl-fe/hooks/use-account-gallery';
 import { MediaItem } from 'pl-fe/pages/accounts/account-gallery';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModalsActions } from 'pl-fe/stores/modals';
 
-import type { Account } from 'pl-fe/normalizers/account';
+import type { Account } from 'pl-api';
 
 interface IProfileMediaPanel {
   account?: Account;
 }
 
 const ProfileMediaPanel: React.FC<IProfileMediaPanel> = ({ account }) => {
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
 
   const { data: attachments, isLoading } = useAccountGallery(account?.id!);
 
   const handleOpenMedia = (attachment: AccountGalleryAttachment): void => {
-    if (attachment.type === 'video') {
-      openModal('VIDEO', { media: attachment, statusId: attachment.status_id });
-    } else {
-
-      openModal('MEDIA', { index: attachment.index, statusId: attachment.status_id });
-    }
+    openModal('MEDIA', { index: attachment.index, statusId: attachment.status_id });
   };
 
   const renderAttachments = () => {

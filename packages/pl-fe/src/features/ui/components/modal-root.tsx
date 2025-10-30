@@ -3,7 +3,7 @@ import React, { Suspense, lazy } from 'react';
 import { cancelReplyCompose } from 'pl-fe/actions/compose';
 import Base from 'pl-fe/components/modal-root';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModals, useModalsActions } from 'pl-fe/stores/modals';
 
 import ModalLoading from './modal-loading';
 
@@ -47,7 +47,6 @@ const MODAL_COMPONENTS = {
   SELECT_BOOKMARK_FOLDER: lazy(() => import('pl-fe/modals/select-bookmark-folder-modal')),
   TEXT_FIELD: lazy(() => import('pl-fe/modals/text-field-modal')),
   UNAUTHORIZED: lazy(() => import('pl-fe/modals/unauthorized-modal')),
-  VIDEO: lazy(() => import('pl-fe/modals/video-modal')),
 };
 
 type ModalType = keyof typeof MODAL_COMPONENTS | null;
@@ -58,10 +57,11 @@ type BaseModalProps = {
 };
 
 const ModalRoot: React.FC = () => {
-  const renderLoading = (modalId: string) => !['MEDIA', 'VIDEO', 'BOOST', 'CONFIRM'].includes(modalId) ? <ModalLoading /> : null;
+  const renderLoading = (modalId: string) => !['MEDIA', 'BOOST', 'CONFIRM'].includes(modalId) ? <ModalLoading /> : null;
 
   const dispatch = useAppDispatch();
-  const { modals, closeModal } = useModalsStore();
+  const modals = useModals();
+  const { closeModal } = useModalsActions();
   const { modalType: type, modalProps: props } = modals.at(-1) || { modalProps: {}, modalType: null };
 
   const onClickClose = (type?: ModalType) => {

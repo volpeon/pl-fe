@@ -7,7 +7,6 @@ import { mentionCompose, replyCompose } from 'pl-fe/actions/compose';
 import { unfilterStatus } from 'pl-fe/actions/statuses';
 import Card from 'pl-fe/components/ui/card';
 import Icon from 'pl-fe/components/ui/icon';
-import Stack from 'pl-fe/components/ui/stack';
 import Text from 'pl-fe/components/ui/text';
 import AccountContainer from 'pl-fe/containers/account-container';
 import Emojify from 'pl-fe/features/emoji/emojify';
@@ -15,11 +14,11 @@ import StatusTypeIcon from 'pl-fe/features/status/components/status-type-icon';
 import { Hotkeys } from 'pl-fe/features/ui/components/hotkeys';
 import { useAppDispatch } from 'pl-fe/hooks/use-app-dispatch';
 import { useAppSelector } from 'pl-fe/hooks/use-app-selector';
-import { useSettings } from 'pl-fe/hooks/use-settings';
 import { useFavouriteStatus, useReblogStatus, useUnfavouriteStatus, useUnreblogStatus } from 'pl-fe/queries/statuses/use-status-interactions';
 import { makeGetStatus, type SelectedStatus } from 'pl-fe/selectors';
-import { useModalsStore } from 'pl-fe/stores/modals';
-import { useStatusMetaStore } from 'pl-fe/stores/status-meta';
+import { useModalsActions } from 'pl-fe/stores/modals';
+import { useSettings } from 'pl-fe/stores/settings';
+import { useStatusMetaActions } from 'pl-fe/stores/status-meta';
 import { textForScreenReader } from 'pl-fe/utils/status';
 
 import EventPreview from './event-preview';
@@ -78,8 +77,8 @@ const Status: React.FC<IStatus> = (props) => {
   const history = useHistory();
   const dispatch = useAppDispatch();
 
-  const { toggleStatusesMediaHidden } = useStatusMetaStore();
-  const { openModal } = useModalsStore();
+  const { toggleStatusesMediaHidden } = useStatusMetaActions();
+  const { openModal } = useModalsActions();
   const { boostModal } = useSettings();
   const didShowCard = useRef(false);
   const node = useRef<HTMLDivElement>(null);
@@ -125,16 +124,11 @@ const Status: React.FC<IStatus> = (props) => {
 
   const handleHotkeyOpenMedia = (e?: KeyboardEvent) => {
     const status = actualStatus;
-    const firstAttachment = status.media_attachments[0];
 
     e?.preventDefault();
 
-    if (firstAttachment) {
-      if (firstAttachment.type === 'video') {
-        openModal('VIDEO', { statusId: status.id, media: firstAttachment, time: 0 });
-      } else {
-        openModal('MEDIA', { statusId: status.id, media: status.media_attachments, index: 0 });
-      }
+    if (status.media_attachments.length > 0) {
+      openModal('MEDIA', { statusId: status.id, media: status.media_attachments, index: 0 });
     }
   };
 
@@ -401,7 +395,7 @@ const Status: React.FC<IStatus> = (props) => {
                 <StatusLanguagePicker status={actualStatus} />
                 {!!actualStatus.edited_at && (
                   <>
-                    <Text tag='span' theme='muted' size='sm'>&middot;</Text>
+                    <span className='⁂-separator' />
 
                     <Icon className='size-4 text-gray-700 dark:text-gray-600' src={require('@phosphor-icons/core/regular/pencil-simple.svg')} />
                   </>
@@ -419,17 +413,15 @@ const Status: React.FC<IStatus> = (props) => {
         <div className='status__content-wrapper'>
           <StatusReplyMentions status={actualStatus} hoverable={hoverable} />
 
-          <Stack className='relative z-0'>
-            {actualStatus.event ? <EventPreview className='shadow-xl' status={actualStatus} /> : (
-              <StatusContent
-                status={actualStatus}
-                onClick={handleClick}
-                collapsable
-                translatable
-                withMedia
-              />
-            )}
-          </Stack>
+          {actualStatus.event ? <EventPreview className='shadow-xl' status={actualStatus} /> : (
+            <StatusContent
+              status={actualStatus}
+              onClick={handleClick}
+              collapsable
+              translatable
+              withMedia
+            />
+          )}
 
           <StatusReactionsBar status={actualStatus} collapsed />
 

@@ -55,7 +55,7 @@ const Option: React.FC<IOption> = ({
   const dispatch = useAppDispatch();
   const intl = useIntl();
 
-  const { suggestions, modified_language: language } = useCompose(composeId);
+  const { suggestions, modifiedLanguage: language } = useCompose(composeId);
 
   const handleOptionTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => onChange(index, event.target.value);
 
@@ -78,7 +78,7 @@ const Option: React.FC<IOption> = ({
   };
 
   return (
-    <HStack alignItems='center' justifyContent='between' space={4}>
+    <div className='⁂-compose-form__poll__option'>
       <HStack alignItems='center' space={2} grow>
         <div className='w-6'>
           <Text weight='bold'>{index + 1}.</Text>
@@ -107,7 +107,7 @@ const Option: React.FC<IOption> = ({
           </Button>
         </div>
       )}
-    </HStack>
+    </div>
   );
 };
 
@@ -120,7 +120,7 @@ const PollForm: React.FC<IPollForm> = ({ composeId }) => {
   const intl = useIntl();
   const { configuration } = useInstance();
 
-  const { poll, language, modified_language: modifiedLanguage } = useCompose(composeId);
+  const { poll, language, modifiedLanguage } = useCompose(composeId);
 
   const options = !modifiedLanguage || modifiedLanguage === language ? poll?.options : poll?.options_map.map((option, key) => option[modifiedLanguage] || poll.options[key]);
   const expiresIn = poll?.expires_in;
@@ -145,8 +145,8 @@ const PollForm: React.FC<IPollForm> = ({ composeId }) => {
   }
 
   return (
-    <Stack space={4}>
-      <Stack space={2}>
+    <div className='⁂-compose-form__poll'>
+      <div className='⁂-compose-form__poll__options'>
         {options.map((title: string, i: number) => (
           <Option
             composeId={composeId}
@@ -175,7 +175,7 @@ const PollForm: React.FC<IPollForm> = ({ composeId }) => {
             </Button>
           )}
         </HStack>
-      </Stack>
+      </div>
 
       <Divider />
 
@@ -212,7 +212,7 @@ const PollForm: React.FC<IPollForm> = ({ composeId }) => {
           {intl.formatMessage(messages.removePoll)}
         </button>
       </div>
-    </Stack>
+    </div>
   );
 };
 

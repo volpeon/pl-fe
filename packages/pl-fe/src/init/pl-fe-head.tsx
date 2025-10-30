@@ -4,11 +4,11 @@ import React, { useEffect } from 'react';
 import InlineStyle from 'pl-fe/components/inline-style';
 import { useLocale, useLocaleDirection } from 'pl-fe/hooks/use-locale';
 import { usePlFeConfig } from 'pl-fe/hooks/use-pl-fe-config';
-import { useSettings } from 'pl-fe/hooks/use-settings';
 import { useTheme } from 'pl-fe/hooks/use-theme';
 import { useThemeCss } from 'pl-fe/hooks/use-theme-css';
 import { startSentry } from 'pl-fe/sentry';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useHasModals } from 'pl-fe/stores/modals';
+import { useSettings } from 'pl-fe/stores/settings';
 
 const Helmet = React.lazy(() => import('pl-fe/components/helmet'));
 
@@ -20,7 +20,7 @@ const PlFeHead = () => {
   const plFeConfig = usePlFeConfig();
   const theme = useTheme();
 
-  const withModals = useModalsStore().modals.length > 0;
+  const withModals = useHasModals();
 
   const themeCss = useThemeCss();
   const dsn = plFeConfig.sentryDsn;

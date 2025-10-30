@@ -1,5 +1,8 @@
 import * as v from 'valibot';
 
+import { isDefaultAvatar, isDefaultHeader } from '../utils/accounts';
+import { getDomainFromURL } from '../utils/domain';
+
 import { customEmojiSchema } from './custom-emoji';
 import { groupRelationshipSchema } from './group-relationship';
 import { datetimeSchema, filteredArray } from './utils';
@@ -8,8 +11,10 @@ import { datetimeSchema, filteredArray } from './utils';
  * @category Schemas
  */
 const groupSchema = v.pipe(v.any(), v.transform((group: any) => {
+  const domain = getDomainFromURL(group);
+
   if (group?.config) {
-    return {
+    group = {
       display_name: group.name,
       members_count: group.member_count,
       note: group.short_description,
@@ -25,7 +30,15 @@ const groupSchema = v.pipe(v.any(), v.transform((group: any) => {
       ...group,
     };
   }
-  return group;
+
+  return {
+    domain,
+    ...group,
+    avatar: group.avatar || group.avatar_static,
+    header: group.header || group.header_static,
+    avatar_default: isDefaultAvatar(group.avatar || group.avatar_static),
+    header_default: isDefaultHeader(group.header || group.header_static),
+  };
 }), v.object({
   avatar: v.fallback(v.string(), ''),
   avatar_static: v.fallback(v.string(), ''),
@@ -48,6 +61,9 @@ const groupSchema = v.pipe(v.any(), v.transform((group: any) => {
 
   avatar_description: v.fallback(v.string(), ''),
   header_description: v.fallback(v.string(), ''),
+
+  avatar_default: v.fallback(v.boolean(), false),
+  header_default: v.fallback(v.boolean(), false),
 }));
 
 /**

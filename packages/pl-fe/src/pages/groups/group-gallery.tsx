@@ -8,7 +8,7 @@ import Column from 'pl-fe/components/ui/column';
 import Spinner from 'pl-fe/components/ui/spinner';
 import { type AccountGalleryAttachment, useGroupGallery } from 'pl-fe/hooks/use-account-gallery';
 import { MediaItem } from 'pl-fe/pages/accounts/account-gallery';
-import { useModalsStore } from 'pl-fe/stores/modals';
+import { useModalsActions } from 'pl-fe/stores/modals';
 
 interface IGroupGallery {
   params: { groupId: string };
@@ -17,18 +17,14 @@ interface IGroupGallery {
 const GroupGallery: React.FC<IGroupGallery> = (props) => {
   const { groupId } = props.params;
 
-  const { openModal } = useModalsStore();
+  const { openModal } = useModalsActions();
 
   const { group, isLoading: groupIsLoading } = useGroup(groupId);
 
   const { data: attachments, isFetching, isLoading, hasNextPage, fetchNextPage } = useGroupGallery(groupId);
 
   const handleOpenMedia = (attachment: AccountGalleryAttachment) => {
-    if (attachment.type === 'video') {
-      openModal('VIDEO', { media: attachment, statusId: attachment.status_id });
-    } else {
-      openModal('MEDIA', { index: attachment.index, statusId: attachment.status_id });
-    }
+    openModal('MEDIA', { index: attachment.index, statusId: attachment.status_id });
   };
 
   if (isLoading || groupIsLoading) {
