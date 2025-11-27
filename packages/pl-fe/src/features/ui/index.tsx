@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import React, { Suspense, lazy, useEffect, useRef } from 'react';
-import { Redirect, Switch, useHistory, useLocation } from 'react-router-dom';
+import { matchPath, Redirect, Switch, useHistory, useLocation } from 'react-router-dom';
 
 import { fetchConfig } from 'pl-fe/actions/admin';
 import { fetchFilters } from 'pl-fe/actions/filters';
@@ -151,6 +151,7 @@ import {
   Privacy,
   UserIndex,
   WrenchedTimeline,
+  Drive,
 } from './util/async-components';
 import GlobalHotkeys from './util/global-hotkeys';
 import { WrappedRoute } from './util/react-router-helpers';
@@ -314,6 +315,8 @@ const SwitchingColumnsArea: React.FC<ISwitchingColumnsArea> = React.memo(({ chil
       <WrappedRoute path='/statuses/:statusId' exact layout={StatusLayout} component={Status} content={children} />
       {features.scheduledStatuses && <WrappedRoute path='/scheduled_statuses' layout={DefaultLayout} component={ScheduledStatuses} content={children} />}
       <WrappedRoute path='/draft_statuses' layout={DefaultLayout} component={DraftStatuses} content={children} />
+
+      {features.drive && <WrappedRoute path='/drive/:folderId?' layout={DefaultLayout} component={Drive} content={children} exact />}
 
       <WrappedRoute path='/circle' layout={DefaultLayout} component={Circle} content={children} />
 
@@ -489,8 +492,7 @@ const UI: React.FC<IUI> = React.memo(({ children }) => {
     pointerEvents: isDropdownMenuOpen ? 'none' : undefined,
   };
 
-  // to be used with the deck
-  const fullWidth = false;
+  const fullWidth = !!matchPath(history.location.pathname, '/deck');
 
   return (
     <GlobalHotkeys node={node}>

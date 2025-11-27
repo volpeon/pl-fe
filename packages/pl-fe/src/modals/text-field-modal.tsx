@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 
+import Input from 'pl-fe/components/ui/input';
 import Modal from 'pl-fe/components/ui/modal';
 import Stack from 'pl-fe/components/ui/stack';
 import Textarea from 'pl-fe/components/ui/textarea';
@@ -12,10 +13,11 @@ interface TextFieldModalProps {
   heading: React.ReactNode;
   placeholder?: string;
   confirm: React.ReactNode;
-  onConfirm: (value?: string) => void;
+  onConfirm: (value: string) => void;
   onCancel?: () => void;
   confirmationTheme?: ButtonThemes;
   text?: string;
+  singleLine?: boolean;
 }
 
 const TextFieldModal: React.FC<TextFieldModalProps & BaseModalProps> = ({
@@ -27,8 +29,9 @@ const TextFieldModal: React.FC<TextFieldModalProps & BaseModalProps> = ({
   onCancel,
   confirmationTheme,
   text,
+  singleLine,
 }) => {
-  const [value, setValue] = useState(text);
+  const [value, setValue] = useState(text || '');
 
   const handleClick = () => {
     onClose('TEXT_FIELD');
@@ -50,12 +53,22 @@ const TextFieldModal: React.FC<TextFieldModalProps & BaseModalProps> = ({
       cancelAction={handleCancel}
     >
       <Stack space={4}>
-        <Textarea
-          value={value}
-          onChange={({ target }) => setValue(target.value)}
-          autoComplete='off'
-          placeholder={placeholder}
-        />
+        {singleLine ? (
+          <Input
+            type='text'
+            value={value}
+            onChange={({ target }) => setValue(target.value)}
+            autoComplete='off'
+            placeholder={placeholder}
+          />
+        ) : (
+          <Textarea
+            value={value}
+            onChange={({ target }) => setValue(target.value)}
+            autoComplete='off'
+            placeholder={placeholder}
+          />
+        )}
       </Stack>
     </Modal>
   );

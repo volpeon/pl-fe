@@ -1,9 +1,8 @@
 import React from 'react';
 
-import Stack from 'pl-fe/components/ui/stack';
 import Widget from 'pl-fe/components/ui/widget';
 
-import ProfileField from '../profile-field';
+import { ProfileField } from '../../util/async-components';
 
 import type { Account } from 'pl-api';
 
@@ -13,12 +12,10 @@ interface IProfileFieldsPanel {
 
 /** Custom profile fields for sidebar. */
 const ProfileFieldsPanel: React.FC<IProfileFieldsPanel> = ({ account }) => (
-  <Widget>
-    <Stack space={4}>
-      {account.fields.map((field, i) => (
-        <ProfileField field={field} key={i} emojis={account.emojis} accountId={account.id} />
-      ))}
-    </Stack>
+  <Widget className='⁂-profile-fields-panel'>
+    {account.fields.map((field, i) => (
+      <ProfileField field={field} key={i} emojis={account.emojis} accountId={account.id} />
+    ))}
   </Widget>
 );
 

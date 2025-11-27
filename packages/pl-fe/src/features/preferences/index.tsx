@@ -15,6 +15,7 @@ import { useAppSelector } from 'pl-fe/hooks/use-app-selector';
 import { useFeatures } from 'pl-fe/hooks/use-features';
 import { useInstance } from 'pl-fe/hooks/use-instance';
 import { usePlFeConfig } from 'pl-fe/hooks/use-pl-fe-config';
+import { useTheme } from 'pl-fe/hooks/use-theme';
 import { PaletteListItem } from 'pl-fe/pages/dashboard/theme-editor';
 import { useSettings } from 'pl-fe/stores/settings';
 import sourceCode from 'pl-fe/utils/code';
@@ -24,7 +25,6 @@ import { isStandalone } from 'pl-fe/utils/state';
 import ThemeToggle from '../ui/components/theme-toggle';
 
 import type { AppDispatch } from 'pl-fe/store';
-import { useTheme } from 'pl-fe/hooks/use-theme';
 
 const languages = {
   en: 'English',
@@ -85,7 +85,6 @@ const languages = {
   th: 'ไทย',
   tr: 'Türkçe',
   uk: 'Українська',
-  zh: '中文',
   'zh-CN': '简体中文',
   'zh-HK': '繁體中文（香港）',
   'zh-TW': '繁體中文（臺灣）',
@@ -154,7 +153,7 @@ const Preferences = () => {
 
   const onThemeReset = () => {
     dispatch(changeSetting(['themeMode'], plFeConfig.defaultSettings.themeMode, { save: false }));
-    dispatch(changeSetting(['theme'], undefined, { showAlert: true }));
+    dispatch(changeSetting(['theme'], plFeConfig.defaultSettings.theme, { showAlert: true }));
   };
 
   const displayMediaOptions = React.useMemo(() => ({

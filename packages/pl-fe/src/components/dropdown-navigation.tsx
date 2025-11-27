@@ -70,14 +70,14 @@ const DropdownNavigation: React.FC = React.memo((): JSX.Element | null => {
   const { closeSidebar } = useUiStoreActions();
 
   const me = useAppSelector((state) => state.me);
+  const features = useFeatures();
 
   const authenticatedScheduledStatusesCountQueryOptions = useMemo(() => ({
     ...scheduledStatusesCountQueryOptions,
-    enabled: !!me,
-  }), [me]);
+    enabled: !!me && features.scheduledStatuses,
+  }), [me, features]);
 
   const getOtherAccounts = useCallback(makeGetOtherAccounts(), []);
-  const features = useFeatures();
   const { account } = useAccount(me || undefined);
   const otherAccounts = useAppSelector((state) => getOtherAccounts(state));
   const settings = useSettings();
@@ -262,6 +262,15 @@ const DropdownNavigation: React.FC = React.memo((): JSX.Element | null => {
                   to='/circles'
                   icon={require('@phosphor-icons/core/regular/circles-three.svg')}
                   text={<FormattedMessage id='column.circles' defaultMessage='Circles' />}
+                  onClick={closeSidebar}
+                />
+              )}
+
+              {features.drive && (
+                <DropdownNavigationLink
+                  to='/drive'
+                  icon={require('@phosphor-icons/core/regular/cloud.svg')}
+                  text={<FormattedMessage id='column.drive' defaultMessage='Drive' />}
                   onClick={closeSidebar}
                 />
               )}

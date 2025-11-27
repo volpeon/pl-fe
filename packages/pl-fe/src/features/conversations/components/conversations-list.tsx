@@ -1,5 +1,5 @@
-import debounce from 'lodash/debounce';
-import React, { useRef } from 'react';
+import { debounce } from '@tanstack/react-pacer/debouncer';
+import React, { useCallback, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import { expandConversations } from 'pl-fe/actions/conversations';
@@ -18,7 +18,7 @@ const ConversationsList: React.FC = () => {
 
   const conversations = useAppSelector((state) => state.conversations.items);
   const isLoading = useAppSelector((state) => state.conversations.isLoading);
-  const hasMore = useAppSelector((state) => !!state.conversations.next);
+  const hasMore = useAppSelector((state) => state.conversations.hasMore);
 
   const getCurrentIndex = (id: string) => conversations.findIndex(x => x.id === id);
 
@@ -29,12 +29,12 @@ const ConversationsList: React.FC = () => {
 
   const handleMoveDown = (id: string) => {
     const elementIndex = getCurrentIndex(id) + 1;
-    selectChild(elementIndex, ref, document.getElementById('direct-list') || undefined);
+    selectChild(elementIndex, ref, document.getElementById('direct-list') || undefined, conversations.length);
   };
 
-  const handleLoadOlder = debounce(() => {
+  const handleLoadOlder = useCallback(debounce(() => {
     if (hasMore) dispatch(expandConversations());
-  }, 300, { leading: true });
+  }, { wait: 300, leading: true }), [hasMore]);
 
   return (
     <ScrollableList

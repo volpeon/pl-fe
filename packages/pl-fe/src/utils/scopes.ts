@@ -6,27 +6,21 @@ import type { RootState } from 'pl-fe/store';
  * Get the OAuth scopes to use for login & signup.
  * Mastodon will refuse scopes it doesn't know, so care is needed.
  */
-const getInstanceScopes = (instance: Instance, admin: boolean =  true) => {
-  const features = getFeatures(instance);
+const getInstanceScopes = (instance: Instance, admin: boolean = true, external: boolean = false) => {
+  const v = getFeatures(instance).version;
 
   let scopes;
 
-  switch (true) {
-    case features.version.software === ICESHRIMP_NET && features.authorizeIceshrimp:
-      scopes = 'read write follow push iceshrimp';
-      break;
-    case features.version.software === TOKI:
+  switch (v.software) {
+    case TOKI:
       scopes = 'read write follow push write:bites';
-      break;
-    case features.version.software === PLEROMA:
-      scopes = 'read write follow push';
       break;
     default:
       scopes = 'read write follow push';
   }
 
   if (admin) {
-    switch (features.version.software) {
+    switch (v.software) {
       case HOLLO:
       case ICESHRIMP_NET:
         break;
@@ -38,11 +32,15 @@ const getInstanceScopes = (instance: Instance, admin: boolean =  true) => {
     }
   }
 
+  if (v.software === ICESHRIMP_NET && !external) {
+    scopes += ' iceshrimp';
+  }
+
   return scopes;
 };
 
 /** Convenience function to get scopes from instance in store. */
-const getScopes = (state: RootState) => getInstanceScopes(state.instance);
+const getScopes = (state: RootState, admin?: boolean, external?: boolean) => getInstanceScopes(state.instance, admin, external);
 
 export {
   getInstanceScopes,

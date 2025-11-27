@@ -257,7 +257,7 @@ const getFeatures = (instance: Instance) => {
       instance.api_versions.mastodon >= 6,
     ]),
 
-    accountIsCat: instance.api_versions['cats.pleroma.pl-api'] >= 1,
+    accountIsCat: instance.api_versions['is_cat.pleroma.pl-api'] >= 1,
 
     /**
      * Ability to set one's location on their profile.
@@ -425,6 +425,12 @@ const getFeatures = (instance: Instance) => {
 
     /** Whether people who blocked you are visible through the API. */
     blockersVisible: instance.api_versions['blockers_visible.pleroma.pl-api'] >= 1,
+
+    /**
+     * Ability to specify how long the account block should last.
+     * @see PUT /api/v1/accounts/:id/block
+     */
+    blocksDuration: instance.api_versions['block_expiration.pleroma.pl-api'] >= 1,
 
     bookmarkFolderEmojis: instance.api_versions['bookmark_folders.pleroma.pl-api'] >= 1,
 
@@ -678,6 +684,8 @@ const getFeatures = (instance: Instance) => {
      * @see DELETE /api/v1/pleroma/admin/domains/:id
      */
     domains: any([instance.pleroma.metadata.multitenancy.enabled]),
+
+    drive: v.software === ICESHRIMP_NET,
 
     /**
      * Ability to edit profile information.
@@ -1694,6 +1702,7 @@ const getFeatures = (instance: Instance) => {
     sessions: any([
       v.software === AKKOMA,
       v.software === ICESHRIMP_NET,
+      v.software === MITRA && gt(v.version, '4.13.1'),
       v.software === PLEROMA,
       v.software === GOTOSOCIAL && gte(v.version, '0.18.2'),
     ]),

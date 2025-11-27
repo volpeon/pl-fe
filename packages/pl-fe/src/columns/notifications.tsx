@@ -144,7 +144,11 @@ const getNotifications = createSelector([
   };
 });
 
-const NotificationsColumn = () => {
+interface INotificationsColumn {
+  multiColumn?: boolean;
+}
+
+const NotificationsColumn: React.FC<INotificationsColumn> = ({ multiColumn }) => {
   const dispatch = useAppDispatch();
   const features = useFeatures();
   const settings = useSettings();
@@ -189,7 +193,7 @@ const NotificationsColumn = () => {
 
   const handleMoveDown = (id: string) => {
     const elementIndex = displayedNotifications.findIndex(item => item !== null && item.group_key === id) + 1;
-    selectChild(elementIndex, node);
+    selectChild(elementIndex, node, undefined, displayedNotifications.length);
   };
 
   const handleDequeueNotifications = useCallback(() => {
@@ -259,6 +263,7 @@ const NotificationsColumn = () => {
       listClassName={clsx('divide-y divide-solid divide-gray-200 black:divide-gray-800 dark:divide-primary-800', {
         'animate-pulse': displayedNotifications.length === 0,
       })}
+      useWindowScroll={!multiColumn}
     >
       {scrollableContent!}
     </ScrollableList>

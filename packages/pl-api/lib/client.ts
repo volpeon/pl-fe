@@ -25,6 +25,7 @@ import {
   announcementSchema,
   antennaSchema,
   applicationSchema,
+  asyncRefreshSchema,
   authorizationServerMetadataSchema,
   backupSchema,
   bookmarkFolderSchema,
@@ -95,7 +96,7 @@ import {
 } from './entities';
 import { coerceObject, filteredArray } from './entities/utils';
 import { AKKOMA, type Features, getFeatures, GOTOSOCIAL, ICESHRIMP_NET, MITRA, PIXELFED, PLEROMA } from './features';
-import request, { getNextLink, getPrevLink, type RequestBody, type RequestMeta } from './request';
+import request, { getAsyncRefreshHeader, getNextLink, getPrevLink, type RequestBody, type RequestMeta } from './request';
 import { buildFullPath } from './utils/url';
 
 import type {
@@ -180,6 +181,7 @@ import type {
   GetJoinedEventsParams,
 } from './params/events';
 import type {
+  BlockAccountParams,
   CreateFilterParams,
   GetBlocksParams,
   GetDomainBlocksParams,
@@ -1473,11 +1475,23 @@ class PlApiClient {
      * Requires features{@link Features.sessions}.
      * @see {@link https://docs.pleroma.social/backend/development/API/pleroma_api/#get-apioauth_tokens}
      */
-    getOauthTokens: () => this.#paginatedGet(
-      this.features.version.software === GOTOSOCIAL ? '/api/v1/tokens' : '/api/oauth_tokens',
-      {},
-      oauthTokenSchema,
-    ),
+    getOauthTokens: () => {
+      let url;
+
+      switch (this.features.version.software) {
+        case GOTOSOCIAL:
+          url = '/api/v1/tokens';
+          break;
+        case MITRA:
+          url = '/api/v1/settings/sessions';
+          break;
+        default:
+          url = '/api/oauth_tokens';
+          break;
+      }
+
+      return this.#paginatedGet(url, {}, oauthTokenSchema);
+    },
 
     /**
      * Revoke a user session by its ID
@@ -1491,6 +1505,9 @@ class PlApiClient {
       switch (this.features.version.software) {
         case GOTOSOCIAL:
           response = await this.request(`/api/v1/tokens/${oauthTokenId}/invalidate`, { method: 'POST' });
+          break;
+        case MITRA:
+          response = await this.request(`/api/v1/settings/sessions/${oauthTokenId}`, { method: 'DELETE' });
           break;
         default:
           response = await this.request(`/api/oauth_tokens/${oauthTokenId}`, { method: 'DELETE' });
@@ -2049,9 +2066,10 @@ class PlApiClient {
      * Block account
      * Block the given account. Clients should filter statuses from this account if received (e.g. due to a boost in the Home timeline)
      * @see {@link https://docs.joinmastodon.org/methods/accounts/#block}
+     * `duration` parameter requires features{@link Features.blocksDuration}.
      */
-    blockAccount: async (accountId: string) => {
-      const response = await this.request(`/api/v1/accounts/${accountId}/block`, { method: 'POST' });
+    blockAccount: async (accountId: string, params?: BlockAccountParams) => {
+      const response = await this.request(`/api/v1/accounts/${accountId}/block`, { method: 'POST', body: params });
 
       return v.parse(relationshipSchema, response.json);
     },
@@ -2460,7 +2478,7 @@ class PlApiClient {
      * Delete a status
      * Delete one of your own statuses.
      *
-     * `delete_media` parameters requires features{@link Features.deleteMedia}.
+     * `delete_media` parameter requires features{@link Features.deleteMedia}.
      * @see {@link https://docs.joinmastodon.org/methods/statuses/#delete}
      */
     deleteStatus: async (statusId: string, deleteMedia?: boolean) => {
@@ -2477,7 +2495,9 @@ class PlApiClient {
     getContext: async (statusId: string, params?: GetStatusContextParams) => {
       const response = await this.request(`/api/v1/statuses/${statusId}/context`, { params });
 
-      return v.parse(contextSchema, response.json);
+      const asyncRefreshHeader = getAsyncRefreshHeader(response);
+
+      return { asyncRefreshHeader, ...v.parse(contextSchema, response.json) } ;
     },
 
     /**
@@ -3887,6 +3907,19 @@ class PlApiClient {
       const response = await this.request(`/api/v1/announcements/${announcementId}/reactions/${emoji}`, { method: 'DELETE' });
 
       return response.json as {};
+    },
+  };
+
+  /** Experimental async refreshes API methods */
+  public readonly asyncRefreshes = {
+    /**
+     * Get Status of Async Refresh
+     * @see {@link https://docs.joinmastodon.org/methods/async_refreshes/#show}
+     */
+    show: async (id: string) => {
+      const response = await this.request(`/api/v1_alpha/async_refreshes/${id}`);
+
+      return v.parse(asyncRefreshSchema, response.json);
     },
   };
 
@@ -5883,12 +5916,12 @@ class PlApiClient {
       return v.parse(driveFolderSchema, response.json);
     },
 
-    createFolder: async (name: string, parentId: string) => {
+    createFolder: async (name: string, parentId?: string) => {
       await this.#getIceshrimpAccessToken();
 
       const response = await this.request('/api/iceshrimp/drive/folder', {
         method: 'POST',
-        body: { name, parentId },
+        body: { name, parentId: parentId || null },
       });
 
       return v.parse(driveFolderSchema, response.json);
@@ -5915,12 +5948,12 @@ class PlApiClient {
       return response;
     },
 
-    moveFolder: async (id: string, targetFolderId: string) => {
+    moveFolder: async (id: string, targetFolderId?: string) => {
       await this.#getIceshrimpAccessToken();
 
       const response = await this.request(`/api/iceshrimp/drive/folder/${id}/move`, {
         method: 'POST',
-        body: { folderId: targetFolderId },
+        body: { folderId: targetFolderId || null },
       });
 
       return v.parse(driveFolderSchema, response.json);
@@ -5934,12 +5967,13 @@ class PlApiClient {
       return v.parse(driveFileSchema, response.json);
     },
 
-    createFile: async (file: File, folderId: string) => {
+    createFile: async (file: File, folderId?: string) => {
       await this.#getIceshrimpAccessToken();
 
       const response = await this.request('/api/iceshrimp/drive', {
         method: 'POST',
-        body: { file, folderId },
+        body: { file },
+        params: { folderId },
         contentType: '',
       });
 
@@ -5950,7 +5984,7 @@ class PlApiClient {
       await this.#getIceshrimpAccessToken();
 
       const response = await this.request(`/api/iceshrimp/drive/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         body: params,
       });
 
@@ -5967,15 +6001,15 @@ class PlApiClient {
       return response;
     },
 
-    moveFile: async (id: string, targetFolderId: string) => {
+    moveFile: async (id: string, targetFolderId?: string) => {
       await this.#getIceshrimpAccessToken();
 
       const response = await this.request(`/api/iceshrimp/drive/${id}/move`, {
         method: 'POST',
-        body: { folderId: targetFolderId },
+        body: { folderId: targetFolderId || null },
       });
 
-      return v.parse(driveFolderSchema, response.json);
+      return v.parse(driveFileSchema, response.json);
     },
   };
 

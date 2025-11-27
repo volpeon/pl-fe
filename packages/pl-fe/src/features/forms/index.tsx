@@ -1,9 +1,8 @@
 import clsx from 'clsx';
-import MultiselectReactDropdown from 'multiselect-react-dropdown';
 import React, { useMemo, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
-import Icon from 'pl-fe/components/ui/icon';
+import { Multiselect } from 'pl-fe/components/ui/multiselect';
 import Select from 'pl-fe/components/ui/select';
 
 const messages = defineMessages({
@@ -146,15 +145,14 @@ const Mutliselect: React.FC<IMultiselect> = (props) => {
   };
 
   const selectElem = (
-    <MultiselectReactDropdown
+    <Multiselect
       className='plfe-multiselect'
       options={options}
       selectedValues={selectedValues}
       onSelect={handleChange}
       onRemove={handleChange}
       displayValue='value'
-      disable={disabled}
-      customCloseIcon={<Icon className='ml-1 size-4 hover:cursor-pointer' src={require('@phosphor-icons/core/regular/x-circle.svg')} />}
+      disabled={disabled}
       placeholder={intl.formatMessage(messages.selectPlaceholder)}
       emptyRecordMsg={intl.formatMessage(messages.selectNoOptions)}
     />
